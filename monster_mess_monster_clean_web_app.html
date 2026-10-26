@@ -1,0 +1,2299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monster Mess, Monster Clean - EDB PLP-R Primary 2 English</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Fredoka', cursive, sans-serif;
+      background-color: #F0FDF4;
+      user-select: none;
+    }
+    /* Onboarding login fields: dark fields with readable white text */
+    #input-student-name,
+    #input-student-class,
+    #input-student-number {
+      color: #ffffff;
+      -webkit-text-fill-color: #ffffff;
+      background-color: #064e3b;
+      border-color: #10b981;
+      caret-color: #a7f3d0;
+      color-scheme: dark;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    #input-student-name:focus,
+    #input-student-class:focus,
+    #input-student-number:focus {
+      background-color: #064e3b;
+      border-color: #34d399;
+    }
+    #input-student-name::placeholder,
+    #input-student-number::placeholder {
+      color: #a7f3d0;
+      -webkit-text-fill-color: #a7f3d0;
+      opacity: 1;
+    }
+    #input-student-class option {
+      background-color: #064e3b;
+      color: #ffffff;
+    }
+    #input-student-name:-webkit-autofill,
+    #input-student-name:-webkit-autofill:hover,
+    #input-student-name:-webkit-autofill:focus,
+    #input-student-number:-webkit-autofill,
+    #input-student-number:-webkit-autofill:hover,
+    #input-student-number:-webkit-autofill:focus {
+      -webkit-text-fill-color: #ffffff;
+      box-shadow: 0 0 0 1000px #064e3b inset;
+      caret-color: #a7f3d0;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #E2E8F0;
+      border-radius: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #10B981;
+      border-radius: 8px;
+    }
+    .tab-btn.active {
+      background-color: #059669;
+      color: white;
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+    }
+
+    /* Clean-Up Challenge: drag/drop and speaking */
+    .drag-tool {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: grab;
+      background: #ffffff;
+      border: 2px solid #a7f3d0;
+      color: #065f46;
+      border-radius: 1rem;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.8rem;
+      font-weight: 800;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    }
+    .drag-tool:hover {
+      border-color: #10b981;
+    }
+    .drag-tool:active {
+      cursor: grabbing;
+    }
+    .drag-tool.is-selected {
+      border-color: #f59e0b;
+      background: #fffbeb;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+    }
+    .drag-tool.is-dragging {
+      opacity: 0.45;
+    }
+    .drop-zone {
+      min-height: 6rem;
+      border: 2px dashed #94a3b8;
+      border-radius: 1rem;
+      background: #ffffff;
+      color: #334155;
+      padding: 0.75rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.2rem;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+    }
+    .drop-zone:hover {
+      border-color: #34d399;
+    }
+    .drop-zone.is-over {
+      border-color: #10b981;
+      background: #ecfdf5;
+      transform: scale(1.02);
+    }
+    .drop-zone.is-matched {
+      border-style: solid;
+      border-color: #10b981;
+      background: #ecfdf5;
+    }
+    .drop-zone .zone-icon {
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+    .challenge-shake {
+      animation: challenge-shake 0.35s ease-in-out;
+    }
+    @keyframes challenge-shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    #challenge-record-btn.is-recording {
+      background: #991b1b;
+      box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.25);
+    }
+    #challenge-audio {
+      width: 100%;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .drag-tool,
+      .drop-zone,
+      #challenge-record-btn {
+        transition-duration: 0.001ms !important;
+      }
+      .challenge-shake {
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="p-2 md:p-6 min-h-screen flex flex-col justify-between items-center text-slate-800">
+
+  <!-- ONBOARDING GATEWAY MODAL -->
+  <div id="onboarding-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+    <div class="bg-white rounded-3xl p-6 md:p-8 max-w-lg w-full border-4 border-emerald-500 shadow-2xl text-center relative overflow-hidden">
+      <div class="absolute -top-12 -left-12 w-32 h-32 bg-emerald-100 rounded-full blur-xl"></div>
+      <div class="absolute -bottom-12 -right-12 w-32 h-32 bg-yellow-100 rounded-full blur-xl"></div>
+
+      <div class="relative z-10">
+        <div class="inline-block p-3 bg-emerald-100 rounded-full mb-3 text-4xl animate-bounce">
+          👾
+        </div>
+        <h1 id="onboarding-title" class="text-3xl font-extrabold text-emerald-800 mb-1">Monster Mess, Monster Clean</h1>
+        <p class="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-4">Hong Kong EDB Primary 2 PLP-R Literacy App</p>
+        
+        <p class="text-gray-600 font-bold mb-6 text-sm">Please enter your student info before starting your literacy mission!</p>
+
+        <form onsubmit="saveStudentProfile(event)" class="space-y-4 text-left">
+          <div>
+            <label class="block font-extrabold text-gray-700 text-sm mb-1">Student English Name:</label>
+            <input type="text" id="input-student-name" required placeholder="e.g. Ka-Ho Chan (Alex)" class="w-full border-2 border-emerald-300 rounded-xl p-3 font-bold text-gray-800 focus:outline-none focus:border-emerald-500">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-extrabold text-gray-700 text-sm mb-1">Class Name:</label>
+              <select id="input-student-class" class="w-full border-2 border-emerald-300 rounded-xl p-3 font-bold text-gray-800 focus:outline-none focus:border-emerald-500">
+                <option value="Primary 2A">P.2A</option>
+                <option value="Primary 2B" selected>P.2B</option>
+                <option value="Primary 2C">P.2C</option>
+                <option value="Primary 2D">P.2D</option>
+                <option value="Primary 2E">P.2E</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block font-extrabold text-gray-700 text-sm mb-1">Class Number:</label>
+              <input type="number" id="input-student-number" min="1" max="45" required placeholder="e.g. 14" class="w-full border-2 border-emerald-300 rounded-xl p-3 font-bold text-gray-800 focus:outline-none focus:border-emerald-500">
+            </div>
+          </div>
+
+          <button type="submit" class="w-full mt-4 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-lg py-4 rounded-2xl shadow-lg border-b-4 border-emerald-700 active:translate-y-1 transition-all flex items-center justify-center gap-2">
+            <span>Let's Start Cleaning!</span> 🚀
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP GAMIFICATION STATUS BAR -->
+  <header class="w-full max-w-6xl bg-white rounded-2xl p-3 md:p-4 shadow-md border-2 border-emerald-300 flex flex-wrap justify-between items-center gap-2 mb-4">
+    <div class="flex flex-wrap items-center gap-2">
+      <div id="header-monster-avatar" class="w-11 h-11 rounded-full bg-white border-2 border-emerald-300 p-1 shadow-sm shrink-0" role="img" aria-label="My monster avatar"></div>
+      <span class="bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1 shadow-sm">
+        <i data-lucide="award" class="w-4 h-4"></i>
+        <span>Lvl <span id="user-level">1</span></span>
+      </span>
+      <span class="bg-emerald-50 text-emerald-800 text-xs md:text-sm font-extrabold px-3 py-1.5 rounded-full border border-emerald-200 flex items-center gap-1 min-w-0">
+        <i data-lucide="user" class="w-4 h-4 text-emerald-600"></i>
+        <span id="header-student-tag" class="truncate max-w-[210px]">Student (Not Logged)</span>
+      </span>
+    </div>
+
+    <div class="flex items-center gap-3 md:gap-5 font-extrabold text-xs md:text-sm">
+      <div class="flex items-center gap-1 text-amber-500 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+        <span>⭐</span> <span id="user-stars">3</span> <span class="hidden sm:inline">Stars</span>
+      </div>
+      <div class="flex items-center gap-1 text-yellow-600 bg-yellow-50 px-2.5 py-1 rounded-full border border-yellow-200">
+        <span>🪙</span> <span id="user-coins">25</span> <span class="hidden sm:inline">Coins</span>
+      </div>
+      <div class="flex items-center gap-1 text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200">
+        <span>🏆</span> <span id="user-xp">60</span> <span>XP</span>
+      </div>
+      <button onclick="resetProfileModal()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1 rounded-lg border border-slate-300 font-bold transition">
+        Switch User
+      </button>
+    </div>
+  </header>
+
+  <!-- NAVIGATION MODULE TABS -->
+  <nav class="w-full max-w-6xl flex items-center gap-2 overflow-x-auto pb-2 mb-4 custom-scrollbar">
+    <button onclick="switchTab('creator')" id="tab-creator" class="tab-btn active px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap bg-white text-emerald-800 hover:bg-emerald-100 transition flex items-center gap-2 border border-emerald-300 shadow-sm">
+      <i data-lucide="palette" class="w-4 h-4"></i> 1. Monster Creator
+    </button>
+    <button onclick="switchTab('storybook')" id="tab-storybook" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap bg-white text-emerald-800 hover:bg-emerald-100 transition flex items-center gap-2 border border-emerald-300 shadow-sm">
+      <i data-lucide="book-open" class="w-4 h-4"></i> 2. Story Reader
+    </button>
+    <button onclick="switchTab('phonics')" id="tab-phonics" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap bg-white text-emerald-800 hover:bg-emerald-100 transition flex items-center gap-2 border border-emerald-300 shadow-sm">
+      <i data-lucide="sparkles" class="w-4 h-4"></i> 3. Phonics Cave (/ar/ vs /er/)
+    </button>
+    <button onclick="switchTab('detective')" id="tab-detective" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap bg-white text-emerald-800 hover:bg-emerald-100 transition flex items-center gap-2 border border-emerald-300 shadow-sm">
+      <i data-lucide="search" class="w-4 h-4"></i> 4. Tool Detective
+    </button>
+    <button onclick="switchTab('writer')" id="tab-writer" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap bg-white text-emerald-800 hover:bg-emerald-100 transition flex items-center gap-2 border border-emerald-300 shadow-sm">
+      <i data-lucide="pen-tool" class="w-4 h-4"></i> 5. CUPS Sentence Editor
+    </button>
+    <button onclick="switchTab('challenge')" id="tab-challenge" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap bg-white text-emerald-800 hover:bg-emerald-100 transition flex items-center gap-2 border border-emerald-300 shadow-sm">
+      <i data-lucide="brush" class="w-4 h-4"></i> 6. Clean-Up Challenge
+    </button>
+    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap bg-slate-700 text-white hover:bg-slate-800 transition flex items-center gap-2 border border-slate-600 shadow-sm">
+      <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Teacher Dashboard
+    </button>
+  </nav>
+
+  <!-- MAIN MODULE CONTAINER -->
+  <main class="w-full max-w-6xl bg-white rounded-3xl p-4 md:p-6 shadow-xl border-4 border-emerald-400 min-h-[580px] flex flex-col justify-between">
+    
+    <!-- MODULE 1: CUSTOM MONSTER CREATOR -->
+    <section id="module-creator" class="space-y-6">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b-2 border-emerald-100 pb-3">
+        <div>
+          <h2 class="text-2xl font-black text-emerald-800 flex items-center gap-2">
+            <i data-lucide="sparkles" class="text-emerald-500"></i> Build & Describe Your Messy Monster
+          </h2>
+          <p class="text-xs text-gray-500 font-bold">Hong Kong P.2 PLP-R Sentence Pattern: "My monster has [number] [body part]."</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="randomizeMonster()" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-extrabold text-xs px-3 py-2 rounded-xl border border-amber-300 flex items-center gap-1 transition">
+            <i data-lucide="shuffle" class="w-4 h-4"></i> Randomize
+          </button>
+          <button onclick="speakSentence()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs px-3 py-2 rounded-xl flex items-center gap-1 transition shadow-sm">
+            <i data-lucide="volume-2" class="w-4 h-4"></i> Read Sentence
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- MONSTER DISPLAY CANVAS (LEFT/CENTER) -->
+        <div class="lg:col-span-5 bg-gradient-to-b from-sky-50 to-emerald-50 rounded-2xl p-4 border-2 border-emerald-200 flex flex-col items-center justify-between min-h-[380px] relative shadow-inner">
+          <div class="w-full flex justify-between items-center text-xs text-emerald-700 font-bold mb-2">
+            <span class="bg-white/80 px-2 py-1 rounded-lg border border-emerald-200">Interactive SVG Monster</span>
+            <span id="monster-id-tag" class="bg-white/80 px-2 py-1 rounded-lg border border-emerald-200">P.2 helper canvas</span>
+          </div>
+
+          <!-- SVG MONSTER DRAWING -->
+          <div id="monster-svg-container" class="w-64 h-64 flex items-center justify-center my-auto transition-all duration-300" role="img" aria-label="My monster">
+            <!-- Dynamically populated via JS -->
+          </div>
+
+          <!-- SENTENCE BOX SCAFFOLD -->
+          <div class="w-full bg-white/95 rounded-xl p-3 border-2 border-emerald-400 shadow-md text-center mt-2">
+            <p id="monster-live-sentence" class="text-base font-extrabold text-emerald-900 leading-relaxed">
+              My monster has 3 eyes, 2 ears, and a green circle body.
+            </p>
+          </div>
+        </div>
+
+        <!-- CONTROLS CONTAINER (RIGHT) -->
+        <div class="lg:col-span-7 space-y-4">
+          
+          <!-- Category Selector -->
+          <div class="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-xl font-bold text-xs">
+            <button onclick="setControlCategory('shape')" id="cat-shape" class="cat-btn active flex-1 py-1.5 px-2 rounded-lg bg-emerald-600 text-white shadow">Body/Shape</button>
+            <button onclick="setControlCategory('face')" id="cat-face" class="cat-btn flex-1 py-1.5 px-2 rounded-lg text-slate-600 hover:bg-slate-200">Eyes & Mouth</button>
+            <button onclick="setControlCategory('limbs')" id="cat-limbs" class="cat-btn flex-1 py-1.5 px-2 rounded-lg text-slate-600 hover:bg-slate-200">Hands & Legs</button>
+            <button onclick="setControlCategory('tools')" id="cat-tools" class="cat-btn flex-1 py-1.5 px-2 rounded-lg text-slate-600 hover:bg-slate-200">Cleaning Tool</button>
+          </div>
+
+          <!-- CONTROLS PANELS -->
+          <div id="panel-shape" class="control-panel space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+            <h3 class="font-extrabold text-slate-700 text-sm flex items-center gap-1"><i data-lucide="shapes" class="w-4 h-4 text-emerald-600"></i> Body Shape & Color</h3>
+            
+            <div>
+              <label class="block text-xs font-bold text-gray-500 mb-1">Select Head / Body Shape:</label>
+              <div class="grid grid-cols-3 gap-2">
+                <button onclick="updateMonster('shape', 'circle')" class="shape-opt p-2 border-2 rounded-xl bg-white hover:border-emerald-500 font-bold text-xs">Circle</button>
+                <button onclick="updateMonster('shape', 'square')" class="shape-opt p-2 border-2 rounded-xl bg-white hover:border-emerald-500 font-bold text-xs">Square</button>
+                <button onclick="updateMonster('shape', 'triangle')" class="shape-opt p-2 border-2 rounded-xl bg-white hover:border-emerald-500 font-bold text-xs">Triangle</button>
+                <button onclick="updateMonster('shape', 'rectangle')" class="shape-opt p-2 border-2 rounded-xl bg-white hover:border-emerald-500 font-bold text-xs">Rectangle</button>
+                <button onclick="updateMonster('shape', 'blob')" class="shape-opt p-2 border-2 rounded-xl bg-white hover:border-emerald-500 font-bold text-xs">Blob</button>
+                <button onclick="updateMonster('shape', 'star')" class="shape-opt p-2 border-2 rounded-xl bg-white hover:border-emerald-500 font-bold text-xs">Star</button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-500 mb-1">Body Color:</label>
+              <div class="flex flex-wrap gap-2">
+                <button onclick="updateMonster('color', '#10B981')" class="w-8 h-8 rounded-full bg-emerald-500 border-2 border-white shadow hover:scale-110 transition"></button>
+                <button onclick="updateMonster('color', '#3B82F6')" class="w-8 h-8 rounded-full bg-blue-500 border-2 border-white shadow hover:scale-110 transition"></button>
+                <button onclick="updateMonster('color', '#8B5CF6')" class="w-8 h-8 rounded-full bg-purple-500 border-2 border-white shadow hover:scale-110 transition"></button>
+                <button onclick="updateMonster('color', '#EC4899')" class="w-8 h-8 rounded-full bg-pink-500 border-2 border-white shadow hover:scale-110 transition"></button>
+                <button onclick="updateMonster('color', '#F59E0B')" class="w-8 h-8 rounded-full bg-amber-500 border-2 border-white shadow hover:scale-110 transition"></button>
+                <button onclick="updateMonster('color', '#EF4444')" class="w-8 h-8 rounded-full bg-red-500 border-2 border-white shadow hover:scale-110 transition"></button>
+              </div>
+            </div>
+          </div>
+
+          <div id="panel-face" class="control-panel hidden space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+            <h3 class="font-extrabold text-slate-700 text-sm flex items-center gap-1"><i data-lucide="smile" class="w-4 h-4 text-emerald-600"></i> Facial Features</h3>
+            
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">Number of Eyes:</label>
+                <select onchange="updateMonster('eyes', this.value)" id="select-eyes" class="w-full p-2 border-2 border-slate-300 rounded-xl font-bold text-xs bg-white">
+                  <option value="1">1 Eye</option>
+                  <option value="2">2 Eyes</option>
+                  <option value="3" selected>3 Eyes</option>
+                  <option value="4">4 Eyes</option>
+                  <option value="5">5 Eyes</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">Number of Ears:</label>
+                <select onchange="updateMonster('ears', this.value)" id="select-ears" class="w-full p-2 border-2 border-slate-300 rounded-xl font-bold text-xs bg-white">
+                  <option value="0">0 Ears</option>
+                  <option value="2" selected>2 Ears</option>
+                  <option value="4">4 Ears</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">Mouth Style:</label>
+                <select onchange="updateMonster('mouth', this.value)" id="select-mouth" class="w-full p-2 border-2 border-slate-300 rounded-xl font-bold text-xs bg-white">
+                  <option value="smile">Big Smile 😁</option>
+                  <option value="teeth">Fanged Teeth 😬</option>
+                  <option value="silly">Silly Tongue 😛</option>
+                  <option value="surprised">O-Shape Surprised 😮</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">Nose Type:</label>
+                <select onchange="updateMonster('nose', this.value)" id="select-nose" class="w-full p-2 border-2 border-slate-300 rounded-xl font-bold text-xs bg-white">
+                  <option value="none">No Nose</option>
+                  <option value="button" selected>Button Nose</option>
+                  <option value="triangle">Triangle Nose</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div id="panel-limbs" class="control-panel hidden space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+            <h3 class="font-extrabold text-slate-700 text-sm flex items-center gap-1"><i data-lucide="hand" class="w-4 h-4 text-emerald-600"></i> Hands & Legs</h3>
+            
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">Number of Hands:</label>
+                <select onchange="updateMonster('hands', this.value)" id="select-hands" class="w-full p-2 border-2 border-slate-300 rounded-xl font-bold text-xs bg-white">
+                  <option value="2" selected>2 Hands</option>
+                  <option value="4">4 Hands</option>
+                  <option value="6">6 Hands</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">Number of Legs:</label>
+                <select onchange="updateMonster('legs', this.value)" id="select-legs" class="w-full p-2 border-2 border-slate-300 rounded-xl font-bold text-xs bg-white">
+                  <option value="2" selected>2 Legs</option>
+                  <option value="3">3 Legs</option>
+                  <option value="4">4 Legs</option>
+                  <option value="0">Tentacles (Floating)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div id="panel-tools" class="control-panel hidden space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+            <h3 class="font-extrabold text-slate-700 text-sm flex items-center gap-1"><i data-lucide="brush" class="w-4 h-4 text-emerald-600"></i> Cleaning Tool Accessory</h3>
+            
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="updateMonster('tool', 'broom')" class="p-3 border-2 rounded-xl bg-white hover:border-emerald-500 font-bold text-xs flex items-center gap-2">
+                <span>🧹</span> Broom
+              </button>
+              <button onclick="updateMonster('tool', 'mop')" class="p-3 border-2 rounded-xl bg-white hover:border-emerald-500 font-bold text-xs flex items-center gap-2">
+                <span>🪠</span> Mop & Bucket
+              </button>
+              <button onclick="updateMonster('tool', 'duster')" class="p-3 border-2 rounded-xl bg-white hover:border-emerald-500 font-bold text-xs flex items-center gap-2">
+                <span>🪶</span> Feather Duster
+              </button>
+              <button onclick="updateMonster('tool', 'sponge')" class="p-3 border-2 rounded-xl bg-white hover:border-emerald-500 font-bold text-xs flex items-center gap-2">
+                <span>🧽</span> Soap Sponge
+              </button>
+            </div>
+          </div>
+
+          <!-- Complete Creation Button -->
+          <button onclick="completeMonsterMission()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold py-3 rounded-2xl shadow-md border-b-4 border-emerald-700 active:translate-y-1 transition text-center flex items-center justify-center gap-2">
+            <i data-lucide="check-circle-2"></i> Save Monster & Earn 15 XP + 5 Coins
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- MODULE 2: INTERACTIVE STORYBOOK READER -->
+    <section id="module-storybook" class="hidden space-y-6">
+      <div class="flex justify-between items-center border-b-2 border-emerald-100 pb-3">
+        <div>
+          <h2 class="text-2xl font-black text-emerald-800 flex items-center gap-2">
+            <i data-lucide="book-open" class="text-emerald-500"></i> Read-Along: Monster Mess, Monster Clean
+          </h2>
+          <p class="text-xs text-gray-500 font-bold">Hong Kong EDB PLP-R Primary 2 Guided Reading Module</p>
+        </div>
+        <button onclick="readStoryPage()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs px-3 py-2 rounded-xl flex items-center gap-1">
+          <i data-lucide="volume-2" class="w-4 h-4"></i> Read Page
+        </button>
+      </div>
+
+      <div class="bg-amber-50/70 border-2 border-amber-200 rounded-3xl p-6 relative min-h-[360px] flex flex-col justify-between shadow-inner">
+        
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+          <!-- Story Illustration -->
+          <div id="story-image" class="md:col-span-5 h-56 bg-white rounded-2xl border-2 border-amber-300 flex items-center justify-center text-7xl shadow-sm">
+            🧹
+          </div>
+
+          <!-- Story Text Display -->
+          <div class="md:col-span-7 space-y-4">
+            <span id="story-page-number" class="text-xs font-black bg-amber-200 text-amber-900 px-3 py-1 rounded-full uppercase tracking-wider">Page 1 of 4</span>
+            <h3 id="story-title" class="text-xl font-extrabold text-emerald-900">The Messy Bedroom</h3>
+            <p id="story-text" class="text-lg md:text-xl font-bold text-slate-700 leading-relaxed">
+              Timmy's room is very messy! There are dirty socks on the floor and toys under the bed. "Oh no!" says Timmy.
+            </p>
+
+            <!-- Interactive Vocabulary Highlights -->
+            <div class="pt-2">
+              <span class="text-xs font-bold text-slate-500 block mb-1">Target Vocabulary (Tap to hear):</span>
+              <div id="vocab-pills" class="flex flex-wrap gap-2">
+                <!-- Dynamically generated -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Story Navigation Controls -->
+        <div class="flex justify-between items-center pt-4 border-t border-amber-200 mt-4">
+          <button onclick="prevStoryPage()" id="btn-prev-page" class="bg-slate-200 text-slate-700 font-extrabold text-sm px-4 py-2 rounded-xl flex items-center gap-1 disabled:opacity-50">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i> Previous
+          </button>
+          
+          <div class="flex gap-1.5" id="story-dots">
+            <!-- Dynamic page dots -->
+          </div>
+
+          <button onclick="nextStoryPage()" id="btn-next-page" class="bg-emerald-600 text-white font-extrabold text-sm px-4 py-2 rounded-xl flex items-center gap-1">
+            Next Page <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- MODULE 3: PHONICS CAVE (/ar/ vs /er/) -->
+    <section id="module-phonics" class="hidden space-y-6">
+      <div class="flex justify-between items-center border-b-2 border-emerald-100 pb-3">
+        <div>
+          <h2 class="text-2xl font-black text-emerald-800 flex items-center gap-2">
+            <i data-lucide="sparkles" class="text-emerald-500"></i> Phonics Cave: Sort the Sound (/ar/ vs /er/)
+          </h2>
+          <p class="text-xs text-gray-500 font-bold">Listen to the spoken word and sort into the correct Phonics Bucket!</p>
+        </div>
+        <div class="text-right">
+          <span class="text-xs font-bold text-slate-500">Phonics Score:</span>
+          <span id="phonics-score" class="text-lg font-black text-emerald-600 ml-1">0 / 5</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+        
+        <!-- Word Card Center -->
+        <div class="md:col-span-12 bg-emerald-50/60 rounded-3xl p-6 border-2 border-emerald-200 text-center space-y-4">
+          <div class="inline-block bg-white p-3 rounded-2xl shadow-sm border border-emerald-200">
+            <span id="phonics-current-word" class="text-3xl md:text-4xl font-black text-emerald-900 tracking-wider">st__</span>
+          </div>
+
+          <div>
+            <button onclick="playPhonicsAudio()" class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black px-5 py-2.5 rounded-2xl shadow border-b-4 border-amber-600 active:translate-y-1 transition inline-flex items-center gap-2">
+              <i data-lucide="volume-2"></i> Listen to Spoken Word
+            </button>
+          </div>
+
+          <p class="text-xs font-bold text-slate-500">Select which vowel team completes the word:</p>
+        </div>
+
+        <!-- Sorting Buckets -->
+        <div class="md:col-span-6">
+          <button onclick="checkPhonicsAnswer('ar')" class="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-3xl p-6 shadow-lg border-b-4 border-indigo-800 active:translate-y-1 transition text-center space-y-2">
+            <div class="text-3xl font-black">/ar/</div>
+            <div class="text-xs font-bold text-purple-200">As in "star", "park", "car"</div>
+          </button>
+        </div>
+
+        <div class="md:col-span-6">
+          <button onclick="checkPhonicsAnswer('er')" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-3xl p-6 shadow-lg border-b-4 border-teal-800 active:translate-y-1 transition text-center space-y-2">
+            <div class="text-3xl font-black">/er/</div>
+            <div class="text-xs font-bold text-emerald-200">As in "monster", "duster", "water"</div>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- MODULE 4: TOOL DETECTIVE -->
+    <section id="module-detective" class="hidden space-y-6">
+      <div class="flex justify-between items-center border-b-2 border-emerald-100 pb-3">
+        <div>
+          <h2 class="text-2xl font-black text-emerald-800 flex items-center gap-2">
+            <i data-lucide="search" class="text-emerald-500"></i> Tool Detective: Match Action to Tool
+          </h2>
+          <p class="text-xs text-gray-500 font-bold">Read the cleaning task and choose the right tool!</p>
+        </div>
+        <div id="detective-score" class="text-sm font-extrabold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">
+          Progress: 1/3
+        </div>
+      </div>
+
+      <div class="bg-sky-50 rounded-3xl p-6 border-2 border-sky-200 space-y-6">
+        <div class="text-center space-y-2">
+          <span class="text-xs font-black bg-sky-200 text-sky-800 px-3 py-1 rounded-full uppercase">Cleaning Challenge</span>
+          <h3 id="detective-question" class="text-xl md:text-2xl font-extrabold text-slate-800">
+            "There is dust on the bookshelf. What should we use?"
+          </h3>
+        </div>
+
+        <div id="detective-options" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Dynamic Detective Tool Cards -->
+        </div>
+      </div>
+    </section>
+
+    <!-- MODULE 5: CUPS SENTENCE EDITOR -->
+    <section id="module-writer" class="hidden space-y-6">
+      <div class="flex justify-between items-center border-b-2 border-emerald-100 pb-3">
+        <div>
+          <h2 class="text-2xl font-black text-emerald-800 flex items-center gap-2">
+            <i data-lucide="pen-tool" class="text-emerald-500"></i> CUPS Sentence Editor & Proofreader
+          </h2>
+          <p class="text-xs text-gray-500 font-bold">Fix Capitalization, Usage, Punctuation & Spelling!</p>
+        </div>
+        <button onclick="checkCupsWriting()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs px-4 py-2 rounded-xl shadow">
+          Check My Sentence
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+        
+        <!-- Checklist Info -->
+        <div class="md:col-span-4 bg-purple-50 p-4 rounded-2xl border border-purple-200 space-y-3">
+          <h3 class="font-extrabold text-purple-900 text-sm flex items-center gap-1">
+            <i data-lucide="check-square" class="w-4 h-4 text-purple-600"></i> C.U.P.S. Checklist
+          </h3>
+          <ul class="text-xs space-y-2 font-bold text-purple-800">
+            <li class="flex items-center gap-1.5"><span class="bg-purple-200 p-1 rounded">C</span> Capital letter at the start</li>
+            <li class="flex items-center gap-1.5"><span class="bg-purple-200 p-1 rounded">U</span> Understanding & Word order</li>
+            <li class="flex items-center gap-1.5"><span class="bg-purple-200 p-1 rounded">P</span> Punctuation ( . or ? )</li>
+            <li class="flex items-center gap-1.5"><span class="bg-purple-200 p-1 rounded">S</span> Spelling of sight words</li>
+          </ul>
+        </div>
+
+        <!-- Editor Box -->
+        <div class="md:col-span-8 space-y-4">
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+            <label class="block text-xs font-bold text-slate-500 mb-1">Incorrect Sentence Challenge:</label>
+            <p id="cups-target-prompt" class="text-base font-extrabold text-red-600 bg-red-50 p-3 rounded-xl border border-red-200">
+              my monster have four eye and a broom
+            </p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1">Type the corrected sentence here:</label>
+            <textarea id="cups-user-input" rows="3" placeholder="Type your corrected sentence here..." class="w-full border-2 border-emerald-300 rounded-2xl p-3 font-bold text-slate-800 focus:outline-none focus:border-emerald-500"></textarea>
+          </div>
+
+          <div id="cups-feedback-box" class="hidden p-3 rounded-xl font-bold text-sm"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- MODULE 6: CLEAN-UP CHALLENGE -->
+    <section id="module-challenge" class="hidden space-y-6">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b-2 border-emerald-100 pb-3">
+        <div>
+          <h2 class="text-2xl font-black text-emerald-800 flex items-center gap-2">
+            <i data-lucide="brush" class="text-emerald-500"></i> Clean-Up Challenge
+          </h2>
+          <p class="text-xs text-gray-500 font-bold">Drag, match, listen and speak while helping the monster tidy the house.</p>
+        </div>
+        <div class="text-right">
+          <span class="text-xs font-bold text-slate-500">Challenge Progress:</span>
+          <span id="challenge-progress" class="text-lg font-black text-emerald-600 ml-1" aria-live="polite">0 / 4</span>
+        </div>
+      </div>
+
+      <div id="challenge-reward" class="hidden p-3 rounded-xl bg-emerald-100 text-emerald-800 font-extrabold text-sm text-center" role="status" aria-live="polite"></div>
+      <div id="challenge-tracker" class="flex flex-wrap gap-2" role="group" aria-label="Clean-Up Challenge tasks"></div>
+
+      <!-- Challenge 1: tool drag and drop -->
+      <div class="bg-emerald-50 rounded-3xl p-4 md:p-6 border-2 border-emerald-200 space-y-4">
+        <div class="flex justify-between items-center gap-2">
+          <div>
+            <h3 class="text-lg font-black text-emerald-900 flex items-center gap-2">
+              <i data-lucide="hand" class="w-5 h-5"></i> 1. Tool Match: Drag &amp; Drop
+            </h3>
+            <p class="text-xs font-bold text-slate-500">Drag a tool onto the mess it cleans, or tap a tool and then tap a mess.</p>
+          </div>
+          <span id="tool-match-score" class="bg-white text-emerald-800 text-xs font-extrabold px-3 py-1 rounded-full border border-emerald-200">0 / 4</span>
+        </div>
+        <div id="tool-tray" class="flex flex-wrap gap-2" role="group" aria-label="Cleaning tools"></div>
+        <div id="mess-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" aria-label="Messy places"></div>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <p id="tool-feedback" class="text-xs font-bold text-slate-600" aria-live="polite">Pick up a tool to begin.</p>
+          <button onclick="resetToolMatch()" class="bg-white hover:bg-emerald-100 text-emerald-800 font-extrabold text-xs px-3 py-2 rounded-xl border border-emerald-300 transition">↺ New round</button>
+        </div>
+      </div>
+
+      <!-- Challenge 2: action matching -->
+      <div class="bg-sky-50 rounded-3xl p-4 md:p-6 border-2 border-sky-200 space-y-4">
+        <div class="flex justify-between items-center gap-2">
+          <div>
+            <h3 class="text-lg font-black text-sky-900 flex items-center gap-2">
+              <i data-lucide="sparkles" class="w-5 h-5"></i> 2. Action Match: What Should the Monster Clean?
+            </h3>
+            <p class="text-xs font-bold text-slate-500">Tap an action verb, then tap the phrase it belongs with.</p>
+          </div>
+          <span id="action-match-score" class="bg-white text-sky-800 text-xs font-extrabold px-3 py-1 rounded-full border border-sky-200">Matched: 0 / 4</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <div class="text-xs font-black uppercase tracking-wider text-slate-500">Action verbs</div>
+            <div id="action-words" class="grid grid-cols-1 sm:grid-cols-2 gap-2" role="group" aria-label="Action verbs"></div>
+          </div>
+          <div class="space-y-2">
+            <div class="text-xs font-black uppercase tracking-wider text-slate-500">What needs cleaning?</div>
+            <div id="action-phrases" class="grid grid-cols-1 gap-2" role="group" aria-label="Cleaning phrases"></div>
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <p id="action-feedback" class="text-xs font-bold text-slate-600" aria-live="polite">Tap “sweep”, then find the crumbs.</p>
+          <button onclick="resetActionMatch()" class="bg-white hover:bg-sky-100 text-sky-800 font-extrabold text-xs px-3 py-2 rounded-xl border border-sky-300 transition">↺ Practice again</button>
+        </div>
+      </div>
+
+      <!-- Challenge 3: listening -->
+      <div class="bg-amber-50 rounded-3xl p-4 md:p-6 border-2 border-amber-200 space-y-4">
+        <div class="flex justify-between items-center gap-2">
+          <div>
+            <h3 class="text-lg font-black text-amber-900 flex items-center gap-2">
+              <i data-lucide="ear" class="w-5 h-5"></i> 3. Listen &amp; Choose the Tool
+            </h3>
+            <p class="text-xs font-bold text-slate-500">Press play, listen to the cleaning problem, then choose the right tool.</p>
+          </div>
+          <span id="challenge-listening-score" class="bg-white text-amber-800 text-xs font-extrabold px-3 py-1 rounded-full border border-amber-200">0 / 4 found</span>
+        </div>
+        <div id="challenge-listening-card" class="space-y-3"></div>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <p id="challenge-listening-feedback" class="text-xs font-bold text-slate-600" aria-live="polite">Press play to hear a cleaning problem.</p>
+          <button id="challenge-listening-play" onclick="playChallengeListening()" class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs px-4 py-2 rounded-xl shadow border-b-4 border-amber-600 active:translate-y-1 transition inline-flex items-center gap-2">
+            <i data-lucide="volume-2" class="w-4 h-4"></i> Play sentence
+          </button>
+        </div>
+        <details class="text-xs text-slate-500">
+          <summary class="font-bold">Audio help: show the sentence</summary>
+          <p id="challenge-listening-transcript" class="mt-2 text-sm font-bold text-slate-700"></p>
+        </details>
+      </div>
+
+      <!-- Challenge 4: speaking and recording -->
+      <div class="bg-purple-50 rounded-3xl p-4 md:p-6 border-2 border-purple-200 space-y-4">
+        <div class="flex justify-between items-center gap-2">
+          <div>
+            <h3 class="text-lg font-black text-purple-900 flex items-center gap-2">
+              <i data-lucide="mic" class="w-5 h-5"></i> 4. Speak &amp; Record
+            </h3>
+            <p class="text-xs font-bold text-slate-500">Listen to the model, say the sentence clearly, then listen back and check your words.</p>
+          </div>
+          <span id="challenge-speaking-badge" class="bg-white text-purple-800 text-xs font-extrabold px-3 py-1 rounded-full border border-purple-200" aria-live="polite">Not recorded</span>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border-2 border-purple-200 space-y-2">
+          <p class="text-xs font-black text-purple-700 uppercase tracking-wider">Say this sentence</p>
+          <p id="challenge-speaking-sentence" class="text-lg font-black text-purple-950">My monster uses a broom to sweep the crumbs.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="speakChallengeModel()" class="bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs px-4 py-2 rounded-xl shadow transition inline-flex items-center gap-2">
+            <i data-lucide="volume-2" class="w-4 h-4"></i> Listen to model
+          </button>
+          <div id="challenge-record-controls" class="flex flex-wrap gap-2">
+            <button id="challenge-record-btn" onclick="toggleChallengeRecording()" class="bg-red-600 text-white font-extrabold text-xs px-4 py-2 rounded-xl shadow transition inline-flex items-center gap-2">
+              <span aria-hidden="true">🎙️</span> Start recording
+            </button>
+            <button id="challenge-play-recording" onclick="playChallengeRecording()" disabled class="bg-slate-100 text-slate-700 font-extrabold text-xs px-4 py-2 rounded-xl transition">
+              ▶️ Play my recording
+            </button>
+          </div>
+        </div>
+        <audio id="challenge-audio" controls class="hidden"></audio>
+        <p id="challenge-recording-status" class="text-xs font-bold text-slate-600" aria-live="polite">You can listen to the model first. Recordings stay in this tab and are not uploaded.</p>
+        <div class="bg-white p-4 rounded-2xl border border-purple-200 space-y-3">
+          <label class="flex items-center gap-2 text-xs font-bold text-slate-700">
+            <input type="checkbox" id="challenge-speaking-check"> I practised saying the sentence aloud.
+          </label>
+          <button id="challenge-finish-speaking" onclick="finishChallengeSpeaking()" class="bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs px-4 py-2 rounded-xl shadow transition">✅ Mark speaking task complete</button>
+          <p class="text-xs font-bold text-slate-500">No microphone? Tick the box after practising aloud with a partner, then mark the task complete.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODULE 7: TEACHER DASHBOARD -->
+    <section id="module-dashboard" class="hidden space-y-6">
+      <div class="flex justify-between items-center border-b-2 border-slate-200 pb-3">
+        <div>
+          <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">
+            <i data-lucide="layout-dashboard" class="text-emerald-600"></i> Teacher Progress & Class Records
+          </h2>
+          <p class="text-xs text-gray-500 font-bold">Primary 2 English EDB PLP-R Formative Assessment Summary</p>
+        </div>
+        <button onclick="exportClassData()" class="bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-xs px-3 py-2 rounded-xl flex items-center gap-1">
+          <i data-lucide="download" class="w-4 h-4"></i> Export CSV
+        </button>
+      </div>
+
+      <!-- Live Student Profile Banner -->
+      <div class="bg-emerald-800 text-white rounded-2xl p-4 flex flex-wrap justify-between items-center gap-4 shadow-md">
+        <div class="flex items-center gap-3 min-w-0">
+          <div id="dashboard-monster-avatar" class="w-14 h-14 rounded-full bg-white border-2 border-amber-300 p-1 shadow-md shrink-0" role="img" aria-label="My monster avatar"></div>
+          <div class="space-y-1 min-w-0">
+            <div class="text-xs uppercase tracking-wider text-emerald-200 font-bold">Active Student Profile</div>
+            <div id="dash-student-name" class="text-xl font-extrabold truncate">Ka-Ho Chan (P.2B #14)</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 text-sm font-bold">
+          <div>Level: <span id="dash-level" class="text-amber-300">1</span></div>
+          <div>Stars: <span id="dash-stars" class="text-amber-300">3</span></div>
+          <div>XP: <span id="dash-xp" class="text-amber-300">60</span></div>
+        </div>
+      </div>
+
+      <!-- Class Record Table -->
+      <div class="overflow-x-auto rounded-2xl border border-slate-200">
+        <table class="w-full text-left text-xs font-bold">
+          <thead class="bg-slate-100 text-slate-700 uppercase border-b border-slate-200">
+            <tr>
+              <th class="p-3">Class</th>
+              <th class="p-3">No.</th>
+              <th class="p-3">Student Name</th>
+              <th class="p-3">Monster Sentence Built</th>
+              <th class="p-3">Phonics</th>
+              <th class="p-3">CUPS</th>
+              <th class="p-3">Clean-Up Challenge</th>
+              <th class="p-3">Stars</th>
+            </tr>
+          </thead>
+          <tbody id="teacher-table-body" class="divide-y divide-slate-100 text-slate-700">
+            <!-- Dynamic rows -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- GLOBAL BOTTOM BAR -->
+    <footer class="pt-4 border-t border-slate-200 flex flex-wrap justify-between items-center text-xs text-slate-500 font-bold gap-2">
+      <div>EDB Hong Kong PLP-R Primary 2 Module • Monster Mess, Monster Clean</div>
+      <div class="flex items-center gap-2">
+        <span>Interactive Literacy Suite</span>
+      </div>
+    </footer>
+
+  </main>
+
+  <script>
+    /* ==========================================================================
+       GLOBAL STATE & ONBOARDING DATA
+       ========================================================================== */
+    let studentProfile = {
+      name: "Ka-Ho Chan",
+      className: "Primary 2B",
+      classNum: "14",
+      level: 1,
+      stars: 3,
+      coins: 25,
+      xp: 60,
+      phonicsScore: 0,
+      cupsCompleted: false,
+      challenge: {
+        toolMatched: [],
+        actionMatched: [],
+        listeningDone: [],
+        speakingDone: false,
+        awards: {}
+      }
+    };
+
+    let monsterState = {
+      shape: 'circle',
+      color: '#10B981',
+      eyes: 3,
+      ears: 2,
+      mouth: 'smile',
+      nose: 'button',
+      hands: 2,
+      legs: 2,
+      tool: 'broom'
+    };
+
+    let storyIndex = 0;
+    const storyPages = [
+      {
+        title: "The Messy Bedroom",
+        text: "Timmy's room is very messy! There are dirty socks on the floor and toys under the bed. 'Oh no!' says Timmy.",
+        image: "🧹",
+        vocab: ["messy", "bedroom", "socks", "floor"]
+      },
+      {
+        title: "Monster Helper Arrives",
+        text: "A friendly green monster appears! 'I can help you clean!' says the monster. It has 3 bright eyes and a big duster.",
+        image: "👾",
+        vocab: ["monster", "clean", "duster", "bright"]
+      },
+      {
+        title: "Sweeping and Dusting",
+        text: "The monster uses a broom to sweep the dust into the pan. Timmy wipes the table with a wet sponge.",
+        image: "🧽",
+        vocab: ["broom", "sweep", "dust", "sponge"]
+      },
+      {
+        title: "Clean and Happy!",
+        text: "Now the bedroom is tidy and sparkling! Timmy and the monster smile. 'Great job, team!'",
+        image: "🌟",
+        vocab: ["tidy", "sparkling", "smile", "team"]
+      }
+    ];
+
+    let phonicsIndex = 0;
+    const phonicsQuestions = [
+      { word: "st__", answer: "ar", display: "star", full: "star" },
+      { word: "monst__", answer: "er", display: "monster", full: "monster" },
+      { word: "p__k", answer: "ar", display: "park", full: "park" },
+      { word: "dust__", answer: "er", display: "duster", full: "duster" },
+      { word: "c__", answer: "ar", display: "car", full: "car" }
+    ];
+
+    let detectiveIndex = 0;
+    const detectiveQuestions = [
+      {
+        question: "There is dust on the bookshelf. What should we use?",
+        options: [
+          { name: "Feather Duster", icon: "🪶", correct: true },
+          { name: "Mop", icon: "🪠", correct: false },
+          { name: "Sponge", icon: "🧽", correct: false }
+        ]
+      },
+      {
+        question: "Water spilled on the kitchen floor! What should we use?",
+        options: [
+          { name: "Broom", icon: "🧹", correct: false },
+          { name: "Mop & Bucket", icon: "🪠", correct: true },
+          { name: "Feather Duster", icon: "🪶", correct: false }
+        ]
+      },
+      {
+        question: "The table has sticky juice marks. What should we use?",
+        options: [
+          { name: "Wet Sponge", icon: "🧽", correct: true },
+          { name: "Broom", icon: "🧹", correct: false },
+          { name: "Duster", icon: "🪶", correct: false }
+        ]
+      }
+    ];
+
+    /* ==========================================================================
+       CLEAN-UP CHALLENGE DATA
+       ========================================================================== */
+    const TOOL_OPTIONS = [
+      { id: 'broom', name: 'Broom', icon: '🧹' },
+      { id: 'mop', name: 'Mop & Bucket', icon: '🪠' },
+      { id: 'duster', name: 'Feather Duster', icon: '🪶' },
+      { id: 'sponge', name: 'Soap Sponge', icon: '🧽' }
+    ];
+
+    const TOOL_TASKS = [
+      { id: 'shelf', title: 'Dusty bookshelf', icon: '📚', tool: 'duster', sentence: 'Use the duster on the dusty bookshelf.' },
+      { id: 'floor', title: 'Wet kitchen floor', icon: '💧', tool: 'mop', sentence: 'Use the mop on the wet floor.' },
+      { id: 'table', title: 'Sticky table', icon: '🍯', tool: 'sponge', sentence: 'Use the sponge on the sticky table.' },
+      { id: 'carpet', title: 'Crumbs on the carpet', icon: '🍪', tool: 'broom', sentence: 'Use the broom on the crumbs.' }
+    ];
+
+    const ACTION_PAIRS = [
+      { key: 'sweep', action: 'sweep', phrase: 'the crumbs on the carpet', icon: '🍪', sentence: 'The monster sweeps the crumbs.' },
+      { key: 'dust', action: 'dust', phrase: 'the dusty bookshelf', icon: '📚', sentence: 'The monster dusts the bookshelf.' },
+      { key: 'mop', action: 'mop', phrase: 'the wet kitchen floor', icon: '💧', sentence: 'The monster mops the floor.' },
+      { key: 'wipe', action: 'wipe', phrase: 'the sticky table', icon: '🍯', sentence: 'The monster wipes the table.' }
+    ];
+
+    const CHALLENGE_LISTENING = [
+      { id: 'shelf', answer: 'duster', sentence: 'The bookshelf is dusty. Which tool should I use?' },
+      { id: 'floor', answer: 'mop', sentence: 'The kitchen floor is wet. Which tool should I use?' },
+      { id: 'table', answer: 'sponge', sentence: 'The table is sticky. Which tool should I use?' },
+      { id: 'carpet', answer: 'broom', sentence: 'There are crumbs on the carpet. Which tool should I use?' }
+    ];
+
+    const CHALLENGE_SPEAKING_SENTENCE = 'My monster uses a broom to sweep the crumbs.';
+
+    let selectedTool = null;
+    let selectedAction = null;
+    let actionPhraseOrder = [];
+    let challengeListeningOrder = [];
+    let challengeRewardTimer = null;
+    let lastToolDropAt = 0;
+    let challengeRecordingSupported = false;
+    let challengeMediaRecorder = null;
+    let challengeRecordedChunks = [];
+    let challengeRecordedUrl = null;
+    let challengeRecordingStream = null;
+    let challengeRecordingTimer = null;
+    let challengeRecordingSession = 0;
+    let challengeRecordingPending = false;
+
+    function fireConfetti(options) {
+      if (typeof confetti === 'function') {
+        try {
+          confetti(options || { particleCount: 60, spread: 55, origin: { y: 0.6 } });
+        } catch (error) {
+          /* Confetti is decorative. */
+        }
+      }
+    }
+
+    /* ==========================================================================
+       INITIALIZATION & MODAL HANDLERS
+       ========================================================================== */
+    window.onload = function() {
+      if (window.lucide && typeof lucide.createIcons === 'function') {
+        try { lucide.createIcons(); } catch (error) { /* Icons are decorative. */ }
+      }
+      renderMonsterSVG();
+      renderStoryPage();
+      renderPhonicsQuestion();
+      renderDetectiveQuestion();
+      initChallengeTasks();
+      updateHeaderUI();
+      renderTeacherTable();
+      setupTabA11y();
+    };
+
+    function saveStudentProfile(e) {
+      e.preventDefault();
+      studentProfile.name = document.getElementById('input-student-name').value;
+      studentProfile.className = document.getElementById('input-student-class').value;
+      studentProfile.classNum = document.getElementById('input-student-number').value;
+
+      document.getElementById('onboarding-modal').classList.add('hidden');
+      updateHeaderUI();
+      renderTeacherTable();
+
+      fireConfetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+    }
+
+    function resetProfileModal() {
+      document.getElementById('onboarding-modal').classList.remove('hidden');
+    }
+
+    function updateHeaderUI() {
+      studentProfile.level = Math.max(1, Math.floor((Number(studentProfile.xp) || 0) / 100) + 1);
+      document.getElementById('header-student-tag').innerText = `${studentProfile.name} (${studentProfile.className} #${studentProfile.classNum})`;
+      document.getElementById('user-level').innerText = studentProfile.level;
+      document.getElementById('user-stars').innerText = studentProfile.stars;
+      document.getElementById('user-coins').innerText = studentProfile.coins;
+      document.getElementById('user-xp').innerText = studentProfile.xp;
+
+      document.getElementById('dash-student-name').innerText = `${studentProfile.name} (${studentProfile.className} #${studentProfile.classNum})`;
+      document.getElementById('dash-level').innerText = studentProfile.level;
+      document.getElementById('dash-stars').innerText = studentProfile.stars;
+      document.getElementById('dash-xp').innerText = studentProfile.xp;
+    }
+
+    /* ==========================================================================
+       TAB SWITCHING
+       ========================================================================== */
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-selected', 'false');
+        btn.tabIndex = -1;
+      });
+      const activeTab = document.getElementById(`tab-${tabId}`);
+      if (activeTab) {
+        activeTab.classList.add('active');
+        activeTab.setAttribute('aria-selected', 'true');
+        activeTab.tabIndex = 0;
+      }
+
+      const modules = ['creator', 'storybook', 'phonics', 'detective', 'writer', 'challenge', 'dashboard'];
+      modules.forEach(m => {
+        const section = document.getElementById(`module-${m}`);
+        if (section) section.classList.add('hidden');
+      });
+      const activeModule = document.getElementById(`module-${tabId}`);
+      if (activeModule) activeModule.classList.remove('hidden');
+    }
+
+    function setupTabA11y() {
+      const nav = document.querySelector('nav');
+      if (nav) {
+        nav.setAttribute('role', 'tablist');
+        nav.setAttribute('aria-label', 'Monster literacy modules');
+      }
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const id = btn.id.replace('tab-', '');
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-controls', `module-${id}`);
+        btn.setAttribute('aria-selected', btn.classList.contains('active') ? 'true' : 'false');
+        btn.tabIndex = btn.classList.contains('active') ? 0 : -1;
+      });
+      document.querySelectorAll('main section[id^="module-"]').forEach(section => {
+        const id = section.id.replace('module-', '');
+        section.setAttribute('role', 'tabpanel');
+        section.setAttribute('aria-labelledby', `tab-${id}`);
+      });
+      if (nav) {
+        nav.addEventListener('keydown', event => {
+          const tabs = Array.from(document.querySelectorAll('.tab-btn'));
+          const currentIndex = tabs.indexOf(document.activeElement);
+          if (currentIndex < 0) return;
+          let nextIndex = currentIndex;
+          if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
+          else if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+          else if (event.key === 'Home') nextIndex = 0;
+          else if (event.key === 'End') nextIndex = tabs.length - 1;
+          else return;
+          event.preventDefault();
+          tabs[nextIndex].focus();
+          tabs[nextIndex].click();
+        });
+      }
+    }
+
+    /* ==========================================================================
+       MODULE 1: MONSTER CREATOR ENGINE
+       ========================================================================== */
+    function setControlCategory(cat) {
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-600', 'text-white', 'shadow');
+        btn.classList.add('text-slate-600');
+      });
+      document.getElementById(`cat-${cat}`).classList.add('bg-emerald-600', 'text-white', 'shadow');
+
+      document.querySelectorAll('.control-panel').forEach(p => p.classList.add('hidden'));
+      document.getElementById(`panel-${cat}`).classList.remove('hidden');
+    }
+
+    function updateMonster(property, value) {
+      monsterState[property] = value;
+      renderMonsterSVG();
+    }
+
+    function randomizeMonster() {
+      const shapes = ['circle', 'square', 'triangle', 'rectangle', 'blob', 'star'];
+      const colors = ['#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#EF4444'];
+      const mouths = ['smile', 'teeth', 'silly', 'surprised'];
+      const tools = ['broom', 'mop', 'duster', 'sponge'];
+
+      monsterState.shape = shapes[Math.floor(Math.random() * shapes.length)];
+      monsterState.color = colors[Math.floor(Math.random() * colors.length)];
+      monsterState.eyes = Math.floor(Math.random() * 5) + 1;
+      monsterState.ears = Math.random() > 0.5 ? 2 : 0;
+      monsterState.mouth = mouths[Math.floor(Math.random() * mouths.length)];
+      monsterState.hands = [2, 4][Math.floor(Math.random() * 2)];
+      monsterState.legs = [2, 3, 4][Math.floor(Math.random() * 3)];
+      monsterState.tool = tools[Math.floor(Math.random() * tools.length)];
+
+      renderMonsterSVG();
+    }
+
+    function renderMonsterSVG() {
+      const container = document.getElementById('monster-svg-container');
+      const c = monsterState.color;
+
+      // Base Head Shapes
+      let bodySvg = '';
+      if (monsterState.shape === 'circle') {
+        bodySvg = `<circle cx="100" cy="110" r="65" fill="${c}" stroke="#065F46" stroke-width="4" />`;
+      } else if (monsterState.shape === 'square') {
+        bodySvg = `<rect x="40" y="50" width="120" height="120" rx="20" fill="${c}" stroke="#065F46" stroke-width="4" />`;
+      } else if (monsterState.shape === 'rectangle') {
+        bodySvg = `<rect x="50" y="40" width="100" height="130" rx="25" fill="${c}" stroke="#065F46" stroke-width="4" />`;
+      } else if (monsterState.shape === 'triangle') {
+        bodySvg = `<polygon points="100,30 35,160 165,160" fill="${c}" stroke="#065F46" stroke-width="4" />`;
+      } else if (monsterState.shape === 'blob') {
+        bodySvg = `<path d="M100 40 C150 30, 170 80, 160 130 C150 170, 60 170, 40 120 C30 80, 50 40, 100 40 Z" fill="${c}" stroke="#065F46" stroke-width="4" />`;
+      } else if (monsterState.shape === 'star') {
+        bodySvg = `<polygon points="100,20 120,70 175,70 130,105 148,160 100,128 52,160 70,105 25,70 80,70" fill="${c}" stroke="#065F46" stroke-width="4" />`;
+      }
+
+      // Ears
+      let earsSvg = '';
+      const numEars = parseInt(monsterState.ears, 10) || 0;
+      if (numEars >= 2) {
+        earsSvg += `
+          <polygon points="40,60 20,20 60,45" fill="${c}" stroke="#065F46" stroke-width="3" />
+          <polygon points="160,60 180,20 140,45" fill="${c}" stroke="#065F46" stroke-width="3" />
+        `;
+      }
+      if (numEars >= 4) {
+        earsSvg += `
+          <polygon points="70,40 50,8 92,28" fill="${c}" stroke="#065F46" stroke-width="3" />
+          <polygon points="130,40 150,8 108,28" fill="${c}" stroke="#065F46" stroke-width="3" />
+        `;
+      }
+
+      // Eyes Layout
+      let eyesSvg = '';
+      const numEyes = parseInt(monsterState.eyes);
+      if (numEyes === 1) {
+        eyesSvg = `<circle cx="100" cy="95" r="18" fill="white" stroke="#1E293B" stroke-width="3"/>
+                   <circle cx="100" cy="95" r="8" fill="#1E293B"/>`;
+      } else if (numEyes === 2) {
+        eyesSvg = `<circle cx="80" cy="95" r="14" fill="white" stroke="#1E293B" stroke-width="3"/>
+                   <circle cx="80" cy="95" r="6" fill="#1E293B"/>
+                   <circle cx="120" cy="95" r="14" fill="white" stroke="#1E293B" stroke-width="3"/>
+                   <circle cx="120" cy="95" r="6" fill="#1E293B"/>`;
+      } else if (numEyes === 3) {
+        eyesSvg = `<circle cx="68" cy="95" r="12" fill="white" stroke="#1E293B" stroke-width="2.5"/>
+                   <circle cx="68" cy="95" r="5" fill="#1E293B"/>
+                   <circle cx="100" cy="90" r="14" fill="white" stroke="#1E293B" stroke-width="2.5"/>
+                   <circle cx="100" cy="90" r="6" fill="#1E293B"/>
+                   <circle cx="132" cy="95" r="12" fill="white" stroke="#1E293B" stroke-width="2.5"/>
+                   <circle cx="132" cy="95" r="5" fill="#1E293B"/>`;
+      } else if (numEyes === 4) {
+        eyesSvg = `<circle cx="60" cy="90" r="10" fill="white" stroke="#1E293B" stroke-width="2"/>
+                   <circle cx="60" cy="90" r="4" fill="#1E293B"/>
+                   <circle cx="85" cy="90" r="10" fill="white" stroke="#1E293B" stroke-width="2"/>
+                   <circle cx="85" cy="90" r="4" fill="#1E293B"/>
+                   <circle cx="115" cy="90" r="10" fill="white" stroke="#1E293B" stroke-width="2"/>
+                   <circle cx="115" cy="90" r="4" fill="#1E293B"/>
+                   <circle cx="140" cy="90" r="10" fill="white" stroke="#1E293B" stroke-width="2"/>
+                   <circle cx="140" cy="90" r="4" fill="#1E293B"/>`;
+      } else {
+        eyesSvg = `<circle cx="55" cy="90" r="8" fill="white" stroke="#1E293B" stroke-width="2"/><circle cx="55" cy="90" r="3" fill="#1E293B"/>
+                   <circle cx="78" cy="85" r="8" fill="white" stroke="#1E293B" stroke-width="2"/><circle cx="78" cy="85" r="3" fill="#1E293B"/>
+                   <circle cx="100" cy="90" r="10" fill="white" stroke="#1E293B" stroke-width="2"/><circle cx="100" cy="90" r="4" fill="#1E293B"/>
+                   <circle cx="122" cy="85" r="8" fill="white" stroke="#1E293B" stroke-width="2"/><circle cx="122" cy="85" r="3" fill="#1E293B"/>
+                   <circle cx="145" cy="90" r="8" fill="white" stroke="#1E293B" stroke-width="2"/><circle cx="145" cy="90" r="3" fill="#1E293B"/>`;
+      }
+
+      // Mouth
+      let mouthSvg = '';
+      if (monsterState.mouth === 'smile') {
+        mouthSvg = `<path d="M75 125 Q100 150 125 125" fill="none" stroke="#1E293B" stroke-width="4" stroke-linecap="round"/>`;
+      } else if (monsterState.mouth === 'teeth') {
+        mouthSvg = `<path d="M75 125 Q100 145 125 125 Z" fill="#1E293B"/>
+                    <polygon points="85,125 90,133 95,125" fill="white"/>
+                    <polygon points="105,125 110,133 115,125" fill="white"/>`;
+      } else if (monsterState.mouth === 'silly') {
+        mouthSvg = `<path d="M75 125 Q100 145 125 125" fill="none" stroke="#1E293B" stroke-width="4"/>
+                    <path d="M95 132 C95 145, 110 145, 110 132 Z" fill="#EF4444"/>`;
+      } else {
+        mouthSvg = `<ellipse cx="100" cy="130" rx="12" ry="16" fill="#1E293B"/>`;
+      }
+
+      // Nose
+      let noseSvg = '';
+      if (monsterState.nose === 'button') {
+        noseSvg = `<circle cx="100" cy="112" r="5" fill="#EF4444"/>`;
+      } else if (monsterState.nose === 'triangle') {
+        noseSvg = `<polygon points="100,108 94,116 106,116" fill="#1E293B"/>`;
+      }
+
+      // Limbs (Hands & Legs)
+      let limbsSvg = '';
+      let handsSvg = '';
+      const numLegs = parseInt(monsterState.legs, 10) || 0;
+      const numHands = parseInt(monsterState.hands, 10) || 0;
+      if (numLegs === 0) {
+        limbsSvg += `<path d="M75 158 Q55 180 70 195" fill="none" stroke="#065F46" stroke-width="5" stroke-linecap="round"/>
+                     <path d="M100 160 Q95 188 105 198" fill="none" stroke="#065F46" stroke-width="5" stroke-linecap="round"/>
+                     <path d="M125 158 Q145 180 130 195" fill="none" stroke="#065F46" stroke-width="5" stroke-linecap="round"/>`;
+      } else if (numLegs === 2) {
+        limbsSvg += `<line x1="75" y1="160" x2="70" y2="190" stroke="#065F46" stroke-width="6" stroke-linecap="round"/>
+                     <line x1="125" y1="160" x2="130" y2="190" stroke="#065F46" stroke-width="6" stroke-linecap="round"/>`;
+      } else if (numLegs === 3) {
+        limbsSvg += `<line x1="65" y1="160" x2="55" y2="190" stroke="#065F46" stroke-width="5" stroke-linecap="round"/>
+                     <line x1="100" y1="165" x2="100" y2="192" stroke="#065F46" stroke-width="5" stroke-linecap="round"/>
+                     <line x1="135" y1="160" x2="145" y2="190" stroke="#065F46" stroke-width="5" stroke-linecap="round"/>`;
+      } else if (numLegs === 4) {
+        limbsSvg += `<line x1="55" y1="160" x2="45" y2="190" stroke="#065F46" stroke-width="5"/>
+                     <line x1="85" y1="160" x2="80" y2="190" stroke="#065F46" stroke-width="5"/>
+                     <line x1="115" y1="160" x2="120" y2="190" stroke="#065F46" stroke-width="5"/>
+                     <line x1="145" y1="160" x2="155" y2="190" stroke="#065F46" stroke-width="5"/>`;
+      }
+
+      if (numHands >= 2) {
+        handsSvg += `<line x1="43" y1="115" x2="18" y2="100" stroke="#065F46" stroke-width="5" stroke-linecap="round"/>
+                     <circle cx="16" cy="98" r="8" fill="${c}" stroke="#065F46" stroke-width="3"/>
+                     <line x1="157" y1="115" x2="182" y2="100" stroke="#065F46" stroke-width="5" stroke-linecap="round"/>
+                     <circle cx="184" cy="98" r="8" fill="${c}" stroke="#065F46" stroke-width="3"/>`;
+      }
+      if (numHands >= 4) {
+        handsSvg += `<line x1="45" y1="140" x2="20" y2="150" stroke="#065F46" stroke-width="4" stroke-linecap="round"/>
+                     <circle cx="18" cy="151" r="7" fill="${c}" stroke="#065F46" stroke-width="3"/>
+                     <line x1="155" y1="140" x2="180" y2="150" stroke="#065F46" stroke-width="4" stroke-linecap="round"/>
+                     <circle cx="182" cy="151" r="7" fill="${c}" stroke="#065F46" stroke-width="3"/>`;
+      }
+      if (numHands >= 6) {
+        handsSvg += `<line x1="55" y1="158" x2="35" y2="178" stroke="#065F46" stroke-width="4" stroke-linecap="round"/>
+                     <circle cx="33" cy="180" r="7" fill="${c}" stroke="#065F46" stroke-width="3"/>
+                     <line x1="145" y1="158" x2="165" y2="178" stroke="#065F46" stroke-width="4" stroke-linecap="round"/>
+                     <circle cx="167" cy="180" r="7" fill="${c}" stroke="#065F46" stroke-width="3"/>`;
+      }
+
+      // Tool Icon overlay
+      let toolSvg = '';
+      if (monsterState.tool === 'broom') {
+        toolSvg = `<text x="145" y="110" font-size="30">🧹</text>`;
+      } else if (monsterState.tool === 'mop') {
+        toolSvg = `<text x="145" y="110" font-size="30">🪠</text>`;
+      } else if (monsterState.tool === 'duster') {
+        toolSvg = `<text x="145" y="110" font-size="30">🪶</text>`;
+      } else if (monsterState.tool === 'sponge') {
+        toolSvg = `<text x="145" y="110" font-size="30">🧽</text>`;
+      }
+
+      container.innerHTML = `
+        <svg viewBox="0 0 200 210" class="w-full h-full drop-shadow-md">
+          ${limbsSvg}
+          ${handsSvg}
+          ${earsSvg}
+          ${bodySvg}
+          ${eyesSvg}
+          ${noseSvg}
+          ${mouthSvg}
+          ${toolSvg}
+        </svg>
+      `;
+
+      // Update Live Sentence Scaffold Text
+      const colorMap = {
+        '#10B981': 'green',
+        '#3B82F6': 'blue',
+        '#8B5CF6': 'purple',
+        '#EC4899': 'pink',
+        '#F59E0B': 'amber',
+        '#EF4444': 'red'
+      };
+      const colorName = colorMap[monsterState.color] || 'colorful';
+      const eyeCount = parseInt(monsterState.eyes, 10) || 0;
+      const earCount = parseInt(monsterState.ears, 10) || 0;
+      const eyeText = eyeCount === 1 ? '1 eye' : `${eyeCount} eyes`;
+      const earText = earCount === 0 ? 'no ears' : `${earCount} ears`;
+      
+      const liveSentence = `My monster has a ${colorName} ${monsterState.shape} body, ${eyeText}, ${earText}, and holds a ${monsterState.tool}.`;
+      document.getElementById('monster-live-sentence').innerText = liveSentence;
+      container.setAttribute('aria-label', liveSentence);
+
+      // Keep the student's monster avatar in sync with every creator change.
+      const monsterMarkup = container.innerHTML;
+      ['header-monster-avatar', 'dashboard-monster-avatar'].forEach(avatarId => {
+        const avatar = document.getElementById(avatarId);
+        if (!avatar) return;
+        avatar.innerHTML = monsterMarkup;
+        avatar.setAttribute('aria-label', liveSentence);
+        avatar.setAttribute('title', liveSentence);
+      });
+    }
+
+    function speakSentence() {
+      const text = document.getElementById('monster-live-sentence').innerText;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.85;
+        utter.lang = 'en-US';
+        window.speechSynthesis.speak(utter);
+      }
+    }
+
+    function completeMonsterMission() {
+      studentProfile.xp += 15;
+      studentProfile.coins += 5;
+      studentProfile.stars += 1;
+      updateHeaderUI();
+      renderTeacherTable();
+
+      fireConfetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+    }
+
+    /* ==========================================================================
+       MODULE 2: STORYBOOK READER
+       ========================================================================== */
+    function renderStoryPage() {
+      const page = storyPages[storyIndex];
+      document.getElementById('story-page-number').innerText = `Page ${storyIndex + 1} of ${storyPages.length}`;
+      document.getElementById('story-title').innerText = page.title;
+      document.getElementById('story-text').innerText = page.text;
+      document.getElementById('story-image').innerText = page.image;
+
+      // Render Vocab Pills
+      const vocabContainer = document.getElementById('vocab-pills');
+      vocabContainer.innerHTML = '';
+      page.vocab.forEach(v => {
+        const btn = document.createElement('button');
+        btn.className = "bg-amber-200 hover:bg-amber-300 text-amber-900 font-extrabold text-xs px-2.5 py-1 rounded-lg transition flex items-center gap-1";
+        btn.innerHTML = `<span>🔊</span> ${v}`;
+        btn.onclick = () => {
+          if ('speechSynthesis' in window) {
+            const utter = new SpeechSynthesisUtterance(v);
+            utter.lang = 'en-US';
+            window.speechSynthesis.speak(utter);
+          }
+        };
+        vocabContainer.appendChild(btn);
+      });
+
+      // Story Dots
+      const dots = document.getElementById('story-dots');
+      dots.innerHTML = '';
+      storyPages.forEach((_, idx) => {
+        const dot = document.createElement('div');
+        dot.className = `w-3 h-3 rounded-full ${idx === storyIndex ? 'bg-amber-500 w-6' : 'bg-amber-200'} transition-all`;
+        dots.appendChild(dot);
+      });
+
+      document.getElementById('btn-prev-page').disabled = (storyIndex === 0);
+    }
+
+    function nextStoryPage() {
+      if (storyIndex < storyPages.length - 1) {
+        storyIndex++;
+        renderStoryPage();
+      } else {
+        studentProfile.xp += 10;
+        updateHeaderUI();
+        fireConfetti({ particleCount: 60, spread: 50 });
+      }
+    }
+
+    function prevStoryPage() {
+      if (storyIndex > 0) {
+        storyIndex--;
+        renderStoryPage();
+      }
+    }
+
+    function readStoryPage() {
+      const page = storyPages[storyIndex];
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(page.text);
+        utter.rate = 0.85;
+        utter.lang = 'en-US';
+        window.speechSynthesis.speak(utter);
+      }
+    }
+
+    /* ==========================================================================
+       MODULE 3: PHONICS CAVE (/ar/ vs /er/)
+       ========================================================================== */
+    function renderPhonicsQuestion() {
+      const q = phonicsQuestions[phonicsIndex];
+      document.getElementById('phonics-current-word').innerText = q.word;
+      document.getElementById('phonics-score').innerText = `${studentProfile.phonicsScore} / ${phonicsQuestions.length}`;
+    }
+
+    function playPhonicsAudio() {
+      const q = phonicsQuestions[phonicsIndex];
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(q.full);
+        utter.rate = 0.8;
+        utter.lang = 'en-US';
+        window.speechSynthesis.speak(utter);
+      }
+    }
+
+    function checkPhonicsAnswer(choice) {
+      const q = phonicsQuestions[phonicsIndex];
+      if (choice === q.answer) {
+        studentProfile.phonicsScore++;
+        studentProfile.xp += 10;
+        fireConfetti({ particleCount: 50, spread: 40 });
+      }
+
+      if (phonicsIndex < phonicsQuestions.length - 1) {
+        phonicsIndex++;
+        renderPhonicsQuestion();
+      } else {
+        updateHeaderUI();
+        renderTeacherTable();
+      }
+    }
+
+    /* ==========================================================================
+       MODULE 4: TOOL DETECTIVE
+       ========================================================================== */
+    function renderDetectiveQuestion() {
+      const q = detectiveQuestions[detectiveIndex];
+      document.getElementById('detective-question').innerText = `"${q.question}"`;
+      document.getElementById('detective-score').innerText = `Progress: ${detectiveIndex + 1}/${detectiveQuestions.length}`;
+
+      const container = document.getElementById('detective-options');
+      container.innerHTML = '';
+
+      q.options.forEach(opt => {
+        const card = document.createElement('button');
+        card.className = "bg-white hover:bg-sky-100 border-2 border-sky-300 rounded-2xl p-4 flex flex-col items-center justify-center space-y-2 transition shadow-sm hover:scale-105";
+        card.innerHTML = `
+          <span class="text-4xl">${opt.icon}</span>
+          <span class="font-extrabold text-sm text-slate-800">${opt.name}</span>
+        `;
+        card.onclick = () => {
+          if (opt.correct) {
+            studentProfile.xp += 10;
+            studentProfile.coins += 2;
+            updateHeaderUI();
+            fireConfetti({ particleCount: 50, spread: 50 });
+          }
+          if (detectiveIndex < detectiveQuestions.length - 1) {
+            detectiveIndex++;
+            renderDetectiveQuestion();
+          }
+        };
+        container.appendChild(card);
+      });
+    }
+
+    /* ==========================================================================
+       MODULE 5: CUPS SENTENCE EDITOR
+       ========================================================================== */
+    function checkCupsWriting() {
+      const input = document.getElementById('cups-user-input').value.trim();
+      const feedback = document.getElementById('cups-feedback-box');
+      feedback.classList.remove('hidden', 'bg-red-100', 'text-red-800', 'bg-emerald-100', 'text-emerald-800');
+
+      // Target correct options: "My monster has four eyes and a broom." or "My monster has 4 eyes and a broom."
+      const isValid = /^[M]y monster (has|have) (four|4) eyes and a broom\.$/i.test(input);
+
+      if (isValid) {
+        feedback.classList.add('bg-emerald-100', 'text-emerald-800');
+        feedback.innerText = "🌟 Excellent! Capital letter, correct verb 'has', plural 'eyes', and period included!";
+        studentProfile.cupsCompleted = true;
+        studentProfile.xp += 20;
+        studentProfile.stars += 1;
+        updateHeaderUI();
+        renderTeacherTable();
+        fireConfetti({ particleCount: 70, spread: 60 });
+      } else {
+        feedback.classList.add('bg-red-100', 'text-red-800');
+        feedback.innerText = "💡 Check CUPS: Did you start with capital 'M'? Use 'has' instead of 'have'? Plural 'eyes'? End with a period '.'?";
+      }
+    }
+
+    /* ==========================================================================
+       MODULE 6: CLEAN-UP CHALLENGE
+       ========================================================================== */
+    function getChallenge() {
+      if (!studentProfile.challenge || typeof studentProfile.challenge !== 'object') {
+        studentProfile.challenge = {
+          toolMatched: [],
+          actionMatched: [],
+          listeningDone: [],
+          speakingDone: false,
+          awards: {}
+        };
+      }
+      const challenge = studentProfile.challenge;
+      if (!Array.isArray(challenge.toolMatched)) challenge.toolMatched = [];
+      if (!Array.isArray(challenge.actionMatched)) challenge.actionMatched = [];
+      if (!Array.isArray(challenge.listeningDone)) challenge.listeningDone = [];
+      if (!challenge.awards || typeof challenge.awards !== 'object') challenge.awards = {};
+      challenge.toolMatched = Array.from(new Set(challenge.toolMatched.filter(id => TOOL_TASKS.some(task => task.id === id))));
+      challenge.actionMatched = Array.from(new Set(challenge.actionMatched.filter(key => ACTION_PAIRS.some(pair => pair.key === key))));
+      challenge.listeningDone = Array.from(new Set(challenge.listeningDone.filter(id => CHALLENGE_LISTENING.some(prompt => prompt.id === id))));
+      challenge.speakingDone = Boolean(challenge.speakingDone);
+      return challenge;
+    }
+
+    function getChallengeStatuses() {
+      const challenge = getChallenge();
+      return [
+        { key: 'toolMatch', label: 'Tool Match', done: Boolean(challenge.awards.toolMatch) || challenge.toolMatched.length >= TOOL_TASKS.length },
+        { key: 'actionMatch', label: 'Action Match', done: Boolean(challenge.awards.actionMatch) || challenge.actionMatched.length >= ACTION_PAIRS.length },
+        { key: 'listening', label: 'Listening', done: Boolean(challenge.awards.listening) || challenge.listeningDone.length >= CHALLENGE_LISTENING.length },
+        { key: 'speaking', label: 'Speaking', done: Boolean(challenge.awards.speaking) || challenge.speakingDone }
+      ];
+    }
+
+    function getChallengeDoneCount() {
+      return getChallengeStatuses().filter(task => task.done).length;
+    }
+
+    function renderChallengeTracker() {
+      const container = document.getElementById('challenge-tracker');
+      const progress = document.getElementById('challenge-progress');
+      if (!container) return;
+      const statuses = getChallengeStatuses();
+      const doneCount = statuses.filter(task => task.done).length;
+      container.innerHTML = statuses.map(task => `
+        <span class="px-3 py-1.5 rounded-full text-xs font-extrabold ${task.done ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}" aria-label="${task.label}: ${task.done ? 'complete' : 'not complete'}">
+          ${task.done ? '✅' : '○'} ${task.label}
+        </span>
+      `).join('');
+      if (progress) progress.innerText = `${doneCount} / 4`;
+    }
+
+    function showChallengeReward(message) {
+      const banner = document.getElementById('challenge-reward');
+      if (!banner) return;
+      banner.innerText = message;
+      banner.classList.remove('hidden');
+      clearTimeout(challengeRewardTimer);
+      challengeRewardTimer = setTimeout(() => banner.classList.add('hidden'), 4500);
+    }
+
+    function challengeAward(key, message) {
+      const challenge = getChallenge();
+      if (challenge.awards[key]) return false;
+      challenge.awards[key] = true;
+      studentProfile.xp += 10;
+      studentProfile.coins += 2;
+      studentProfile.stars += 1;
+      updateHeaderUI();
+      renderTeacherTable();
+      renderChallengeTracker();
+      showChallengeReward(message + ' +10 XP, +2 coins, +1 star');
+      fireConfetti({ particleCount: 60, spread: 55, origin: { y: 0.6 } });
+      return true;
+    }
+
+    function shuffleChallengeArray(array) {
+      for (let index = array.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        const temporary = array[index];
+        array[index] = array[swapIndex];
+        array[swapIndex] = temporary;
+      }
+      return array;
+    }
+
+    function initChallengeTasks() {
+      selectedTool = null;
+      selectedAction = null;
+      lastToolDropAt = 0;
+      actionPhraseOrder = shuffleChallengeArray(ACTION_PAIRS.map(pair => pair.key));
+      challengeListeningOrder = shuffleChallengeArray(CHALLENGE_LISTENING.map(prompt => prompt.id));
+      renderToolMatch();
+      setToolFeedback('Pick up a tool to begin.', false);
+      renderActionMatch();
+      setActionFeedback('Tap “sweep”, then find the crumbs.', false);
+      renderChallengeListening();
+      setChallengeListeningFeedback(getCurrentChallengeListeningPrompt()
+        ? 'Press play to hear a cleaning problem.'
+        : 'All four listening challenges complete!', false);
+      setupChallengeSpeaking();
+      resetChallengeRecording();
+      updateChallengeSpeakingUI();
+      renderChallengeTracker();
+    }
+
+    /* ---------- Challenge 1: tool drag and drop ---------- */
+    function setToolFeedback(message, isError) {
+      const element = document.getElementById('tool-feedback');
+      if (!element) return;
+      element.innerText = message;
+      element.classList.remove('text-slate-600');
+      element.classList.toggle('text-red-600', Boolean(isError));
+      element.classList.toggle('text-emerald-700', !isError);
+      if (isError) {
+        element.classList.remove('challenge-shake');
+        void element.offsetWidth;
+        element.classList.add('challenge-shake');
+      }
+    }
+
+    function renderToolMatch() {
+      const tray = document.getElementById('tool-tray');
+      const grid = document.getElementById('mess-grid');
+      if (!tray || !grid) return;
+      const challenge = getChallenge();
+      const usedTools = TOOL_TASKS
+        .filter(task => challenge.toolMatched.includes(task.id))
+        .map(task => task.tool);
+      const availableTools = TOOL_OPTIONS.filter(tool => !usedTools.includes(tool.id));
+
+      tray.innerHTML = availableTools.length
+        ? availableTools.map(tool => `
+            <button type="button" class="drag-tool ${selectedTool === tool.id ? 'is-selected' : ''}" draggable="true" data-tool="${tool.id}" aria-pressed="${selectedTool === tool.id ? 'true' : 'false'}">
+              <span aria-hidden="true">${tool.icon}</span> ${tool.name}
+            </button>
+          `).join('')
+        : '<p class="text-xs font-extrabold text-emerald-700">All tools matched — nice cleaning!</p>';
+
+      grid.innerHTML = TOOL_TASKS.map(task => {
+        const matched = challenge.toolMatched.includes(task.id);
+        const tool = TOOL_OPTIONS.find(option => option.id === task.tool);
+        return `
+          <button type="button" class="drop-zone ${matched ? 'is-matched' : ''}" data-mess="${task.id}" aria-label="${task.title}${matched ? ': matched with ' + tool.name : ': drop or tap a tool'}">
+            <span class="zone-icon" aria-hidden="true">${task.icon}</span>
+            <span class="text-sm font-extrabold">${task.title}</span>
+            ${matched
+              ? `<span class="text-xs font-bold text-emerald-700">${tool.icon} ${tool.name} ✅</span>`
+              : '<span class="text-xs font-bold text-slate-500">Drop or tap a tool</span>'}
+          </button>
+        `;
+      }).join('');
+
+      document.getElementById('tool-match-score').innerText = `${challenge.toolMatched.length} / ${TOOL_TASKS.length}`;
+
+      tray.querySelectorAll('[data-tool]').forEach(button => {
+        const toolId = button.getAttribute('data-tool');
+        button.addEventListener('click', () => selectChallengeTool(toolId));
+        button.addEventListener('dragstart', event => {
+          selectedTool = toolId;
+          button.classList.add('is-dragging');
+          if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+            try { event.dataTransfer.setData('text/plain', toolId); } catch (error) { /* Ignore. */ }
+          }
+        });
+        button.addEventListener('dragend', () => button.classList.remove('is-dragging'));
+      });
+
+      grid.querySelectorAll('[data-mess]').forEach(zone => {
+        const messId = zone.getAttribute('data-mess');
+        zone.addEventListener('click', () => handleMessClick(messId));
+        zone.addEventListener('dragover', event => {
+          event.preventDefault();
+          zone.classList.add('is-over');
+        });
+        zone.addEventListener('dragleave', () => zone.classList.remove('is-over'));
+        zone.addEventListener('drop', event => {
+          event.preventDefault();
+          zone.classList.remove('is-over');
+          lastToolDropAt = Date.now();
+          let toolId = selectedTool;
+          if (event.dataTransfer) {
+            const transferred = event.dataTransfer.getData('text/plain');
+            if (transferred) toolId = transferred;
+          }
+          if (toolId) attemptToolMatch(messId, toolId);
+        });
+      });
+    }
+
+    function selectChallengeTool(toolId) {
+      const challenge = getChallenge();
+      const used = TOOL_TASKS.filter(task => challenge.toolMatched.includes(task.id)).map(task => task.tool);
+      if (used.includes(toolId)) return;
+      selectedTool = selectedTool === toolId ? null : toolId;
+      renderToolMatch();
+      if (selectedTool) {
+        const tool = TOOL_OPTIONS.find(option => option.id === selectedTool);
+        setToolFeedback(`Selected ${tool.name}. Now tap the mess it should clean.`, false);
+        speakText(tool.name);
+      } else {
+        setToolFeedback('Selection cleared. Pick a tool to continue.', false);
+      }
+    }
+
+    function handleMessClick(messId) {
+      if (Date.now() - lastToolDropAt < 300) return;
+      const challenge = getChallenge();
+      if (challenge.toolMatched.includes(messId)) return;
+      if (!selectedTool) {
+        setToolFeedback('Tap a tool first, then tap the mess it cleans.', true);
+        return;
+      }
+      attemptToolMatch(messId, selectedTool);
+    }
+
+    function attemptToolMatch(messId, toolId) {
+      const challenge = getChallenge();
+      const task = TOOL_TASKS.find(item => item.id === messId);
+      if (!task || challenge.toolMatched.includes(messId)) return;
+      if (toolId !== task.tool) {
+        selectedTool = null;
+        renderToolMatch();
+        setToolFeedback(`Not quite — the ${task.title.toLowerCase()} needs a different tool. Try again.`, true);
+        const zone = document.querySelector(`[data-mess="${messId}"]`);
+        if (zone) {
+          zone.classList.add('challenge-shake');
+          setTimeout(() => zone.classList.remove('challenge-shake'), 400);
+        }
+        return;
+      }
+
+      challenge.toolMatched.push(messId);
+      selectedTool = null;
+      renderToolMatch();
+      const complete = challenge.toolMatched.length === TOOL_TASKS.length;
+      if (complete) challengeAward('toolMatch', 'Tool Match complete! Every mess has the right tool.');
+      setToolFeedback(complete
+        ? '🎉 All four tools matched! The house is sparkling.'
+        : `✅ Correct! ${task.sentence}`, false);
+      speakText(task.sentence);
+    }
+
+    function resetToolMatch() {
+      getChallenge().toolMatched = [];
+      selectedTool = null;
+      lastToolDropAt = 0;
+      renderToolMatch();
+      renderChallengeTracker();
+      setToolFeedback('New round! The tools are ready again.', false);
+    }
+
+    /* ---------- Challenge 2: action matching ---------- */
+    function setActionFeedback(message, isError) {
+      const element = document.getElementById('action-feedback');
+      if (!element) return;
+      element.innerText = message;
+      element.classList.remove('text-slate-600');
+      element.classList.toggle('text-red-600', Boolean(isError));
+      element.classList.toggle('text-emerald-700', !isError);
+      if (isError) {
+        element.classList.remove('challenge-shake');
+        void element.offsetWidth;
+        element.classList.add('challenge-shake');
+      }
+    }
+
+    function renderActionMatch() {
+      const words = document.getElementById('action-words');
+      const phrases = document.getElementById('action-phrases');
+      if (!words || !phrases) return;
+      const challenge = getChallenge();
+
+      words.innerHTML = ACTION_PAIRS.map(pair => {
+        const matched = challenge.actionMatched.includes(pair.key);
+        const selected = selectedAction === pair.key;
+        return `<button type="button" ${matched ? 'disabled ' : ''}aria-pressed="${selected ? 'true' : 'false'}" onclick="selectChallengeAction('${pair.key}')" class="p-3 rounded-2xl border-2 text-sm font-black transition ${matched
+          ? 'bg-emerald-600 text-white border-emerald-600'
+          : selected
+            ? 'bg-amber-100 border-amber-500 text-emerald-950 ring-2 ring-amber-300'
+            : 'bg-white border-slate-200 hover:border-emerald-400'}">${pair.action}</button>`;
+      }).join('');
+
+      phrases.innerHTML = actionPhraseOrder.map(key => {
+        const pair = ACTION_PAIRS.find(item => item.key === key);
+        if (!pair) return '';
+        const matched = challenge.actionMatched.includes(key);
+        return `<button type="button" ${matched ? 'disabled ' : ''}onclick="selectChallengePhrase('${key}')" class="p-3 rounded-2xl border-2 text-left text-xs font-bold transition ${matched
+          ? 'bg-emerald-100 text-emerald-800 border-emerald-300 opacity-70'
+          : 'bg-amber-50 border-amber-200 hover:border-amber-400 text-emerald-950'}">
+          <span class="text-lg" aria-hidden="true">${pair.icon}</span> ${pair.phrase}
+        </button>`;
+      }).join('');
+
+      document.getElementById('action-match-score').innerText = `Matched: ${challenge.actionMatched.length} / ${ACTION_PAIRS.length}`;
+    }
+
+    function selectChallengeAction(key) {
+      if (getChallenge().actionMatched.includes(key)) return;
+      selectedAction = selectedAction === key ? null : key;
+      renderActionMatch();
+      if (selectedAction) {
+        setActionFeedback(`Selected “${selectedAction}”. Now tap the phrase it belongs with.`, false);
+        speakText(selectedAction);
+      } else {
+        setActionFeedback('Selection cleared. Tap an action verb to begin.', false);
+      }
+    }
+
+    function selectChallengePhrase(key) {
+      const pair = ACTION_PAIRS.find(item => item.key === key);
+      if (!pair) return;
+      const challenge = getChallenge();
+      if (challenge.actionMatched.includes(key)) {
+        setActionFeedback('That pair is already matched.', false);
+        return;
+      }
+      if (!selectedAction) {
+        setActionFeedback('Choose an action verb first, then choose its phrase.', true);
+        return;
+      }
+      if (selectedAction !== key) {
+        selectedAction = null;
+        renderActionMatch();
+        setActionFeedback('Not quite — that phrase belongs with a different action. Try again.', true);
+        return;
+      }
+
+      challenge.actionMatched.push(key);
+      selectedAction = null;
+      renderActionMatch();
+      const complete = challenge.actionMatched.length === ACTION_PAIRS.length;
+      if (complete) challengeAward('actionMatch', 'Action Match complete! You know your cleaning verbs.');
+      setActionFeedback(complete
+        ? '🎉 All four action phrases matched!'
+        : `✅ Correct! ${pair.sentence}`, false);
+      speakText(pair.sentence);
+    }
+
+    function resetActionMatch() {
+      getChallenge().actionMatched = [];
+      selectedAction = null;
+      actionPhraseOrder = shuffleChallengeArray(ACTION_PAIRS.map(pair => pair.key));
+      renderActionMatch();
+      renderChallengeTracker();
+      setActionFeedback('Practice round reset. The phrases have been shuffled.', false);
+    }
+
+    /* ---------- Challenge 3: listening ---------- */
+    function setChallengeListeningFeedback(message, isError) {
+      const element = document.getElementById('challenge-listening-feedback');
+      if (!element) return;
+      element.innerText = message;
+      element.classList.remove('text-slate-600');
+      element.classList.toggle('text-red-600', Boolean(isError));
+      element.classList.toggle('text-emerald-700', !isError);
+    }
+
+    function getCurrentChallengeListeningPrompt() {
+      const done = getChallenge().listeningDone;
+      for (let index = 0; index < challengeListeningOrder.length; index += 1) {
+        const id = challengeListeningOrder[index];
+        if (!done.includes(id)) {
+          return CHALLENGE_LISTENING.find(prompt => prompt.id === id) || null;
+        }
+      }
+      return null;
+    }
+
+    function renderChallengeListening() {
+      const card = document.getElementById('challenge-listening-card');
+      const playButton = document.getElementById('challenge-listening-play');
+      if (!card) return;
+      const challenge = getChallenge();
+      const prompt = getCurrentChallengeListeningPrompt();
+      const progress = document.getElementById('challenge-listening-score');
+      if (progress) progress.innerText = `${challenge.listeningDone.length} / ${CHALLENGE_LISTENING.length} found`;
+      if (playButton) playButton.disabled = !prompt;
+
+      if (!prompt) {
+        card.innerHTML = `
+          <div class="bg-white p-4 rounded-2xl border-2 border-amber-200 space-y-1">
+            <p class="font-extrabold text-amber-900">🎉 All four listening challenges complete!</p>
+            <p class="text-xs font-bold text-slate-600">You listened for clues and chose the right cleaning tool.</p>
+          </div>
+          <button type="button" onclick="resetChallengeListening()" class="bg-white hover:bg-amber-100 text-amber-800 font-extrabold text-xs px-3 py-2 rounded-xl border border-amber-300 transition">↺ Practise again</button>
+        `;
+        document.getElementById('challenge-listening-transcript').innerText = '';
+        return;
+      }
+
+      const options = TOOL_OPTIONS.map(tool => `
+        <button type="button" onclick="answerChallengeListening('${tool.id}')" class="p-3 bg-white hover:bg-amber-100 border-2 border-amber-200 rounded-2xl text-xs font-extrabold flex flex-col items-center gap-1 transition">
+          <span class="text-2xl" aria-hidden="true">${tool.icon}</span> ${tool.name}
+        </button>
+      `).join('');
+
+      card.innerHTML = `
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-xs font-black text-amber-800">Problem ${challenge.listeningDone.length + 1} of ${CHALLENGE_LISTENING.length}</span>
+          <span class="text-xs font-bold text-slate-500">Listen, then choose the tool.</span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2" role="group" aria-label="Choose the cleaning tool">${options}</div>
+      `;
+      document.getElementById('challenge-listening-transcript').innerText = prompt.sentence;
+    }
+
+    function playChallengeListening() {
+      const prompt = getCurrentChallengeListeningPrompt();
+      if (!prompt) {
+        setChallengeListeningFeedback('All four listening challenges are complete. Practise again to replay.', false);
+        return;
+      }
+      if (!speakText(prompt.sentence)) {
+        setChallengeListeningFeedback('Audio is not available in this browser. Open “Audio help” to read the sentence.', true);
+      }
+    }
+
+    function answerChallengeListening(toolId) {
+      const prompt = getCurrentChallengeListeningPrompt();
+      if (!prompt) return;
+      if (toolId !== prompt.answer) {
+        setChallengeListeningFeedback('Not quite. Listen again and think about the mess.', true);
+        return;
+      }
+      const challenge = getChallenge();
+      challenge.listeningDone.push(prompt.id);
+      renderChallengeListening();
+      const complete = challenge.listeningDone.length === CHALLENGE_LISTENING.length;
+      if (complete) challengeAward('listening', 'Listening challenge complete! You matched every problem to a tool.');
+      setChallengeListeningFeedback(complete
+        ? '🎉 Four out of four! Great listening.'
+        : '✅ Correct! The next problem is ready — press play.', false);
+      speakText(complete ? 'Excellent listening! All four problems solved.' : 'Correct!');
+    }
+
+    function resetChallengeListening() {
+      getChallenge().listeningDone = [];
+      challengeListeningOrder = shuffleChallengeArray(CHALLENGE_LISTENING.map(prompt => prompt.id));
+      renderChallengeListening();
+      renderChallengeTracker();
+      setChallengeListeningFeedback('Listening round reset. Press play to begin.', false);
+    }
+
+    /* ---------- Challenge 4: speaking and recording ---------- */
+    function setupChallengeSpeaking() {
+      const nav = typeof navigator !== 'undefined' ? navigator : null;
+      challengeRecordingSupported = Boolean(window.MediaRecorder && nav && nav.mediaDevices &&
+        typeof nav.mediaDevices.getUserMedia === 'function');
+      const controls = document.getElementById('challenge-record-controls');
+      if (controls) controls.classList.toggle('hidden', !challengeRecordingSupported);
+      const target = document.getElementById('challenge-speaking-sentence');
+      if (target) target.innerText = CHALLENGE_SPEAKING_SENTENCE;
+    }
+
+    function setChallengeRecordingStatus(message, tone) {
+      const element = document.getElementById('challenge-recording-status');
+      if (!element) return;
+      element.innerText = message;
+      element.classList.remove('text-slate-600');
+      element.classList.toggle('text-slate-600', tone === 'info');
+      element.classList.toggle('text-emerald-700', tone === 'success' || tone === 'recording');
+      element.classList.toggle('text-red-600', tone === 'error');
+    }
+
+    function setChallengeRecordButton(isRecording) {
+      const button = document.getElementById('challenge-record-btn');
+      if (!button) return;
+      button.classList.toggle('is-recording', Boolean(isRecording));
+      button.innerHTML = isRecording ? '⏹️ Stop recording' : '<span aria-hidden="true">🎙️</span> Start recording';
+      button.setAttribute('aria-pressed', String(Boolean(isRecording)));
+    }
+
+    function updateChallengeSpeakingUI() {
+      const challenge = getChallenge();
+      const done = Boolean(challenge.speakingDone) || Boolean(challenge.awards.speaking);
+      const badge = document.getElementById('challenge-speaking-badge');
+      if (badge) {
+        badge.innerText = done ? 'Completed ✓' : 'Not recorded';
+        badge.className = `text-xs font-extrabold px-3 py-1 rounded-full border ${done
+          ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+          : 'bg-white text-purple-800 border-purple-200'}`;
+      }
+      const checkbox = document.getElementById('challenge-speaking-check');
+      if (checkbox && done) checkbox.checked = true;
+      const finishButton = document.getElementById('challenge-finish-speaking');
+      if (finishButton) finishButton.innerText = done ? 'Speaking task complete ✅' : '✅ Mark speaking task complete';
+      const playButton = document.getElementById('challenge-play-recording');
+      if (playButton) playButton.disabled = !challengeRecordedUrl;
+      const audio = document.getElementById('challenge-audio');
+      if (audio) audio.classList.toggle('hidden', !challengeRecordedUrl);
+      if (done && !(challengeMediaRecorder && challengeMediaRecorder.state === 'recording')) {
+        setChallengeRecordingStatus('Speaking task complete. You can record again for practice.', 'success');
+      } else if (!done && !challengeRecordingSupported) {
+        setChallengeRecordingStatus('Recording is not available in this browser. Practise aloud with a partner, then tick the box below.', 'info');
+      }
+    }
+
+    function resetChallengeRecording() {
+      challengeRecordingSession += 1;
+      challengeRecordingPending = false;
+      clearTimeout(challengeRecordingTimer);
+      challengeRecordingTimer = null;
+      if (challengeMediaRecorder) {
+        challengeMediaRecorder.onstop = null;
+        challengeMediaRecorder.ondataavailable = null;
+        challengeMediaRecorder.onerror = null;
+        try {
+          if (challengeMediaRecorder.state !== 'inactive') challengeMediaRecorder.stop();
+        } catch (error) { /* Ignore. */ }
+      }
+      challengeMediaRecorder = null;
+      if (challengeRecordingStream) {
+        challengeRecordingStream.getTracks().forEach(track => track.stop());
+        challengeRecordingStream = null;
+      }
+      if (challengeRecordedUrl) {
+        URL.revokeObjectURL(challengeRecordedUrl);
+        challengeRecordedUrl = null;
+      }
+      challengeRecordedChunks = [];
+      const audio = document.getElementById('challenge-audio');
+      if (audio) {
+        if (typeof audio.pause === 'function') audio.pause();
+        audio.removeAttribute('src');
+        if (typeof audio.load === 'function') {
+          try { audio.load(); } catch (error) { /* Ignore. */ }
+        }
+        audio.classList.add('hidden');
+      }
+      const playButton = document.getElementById('challenge-play-recording');
+      if (playButton) playButton.disabled = true;
+      const checkbox = document.getElementById('challenge-speaking-check');
+      if (checkbox) checkbox.checked = false;
+      setChallengeRecordButton(false);
+      setChallengeRecordingStatus(challengeRecordingSupported
+        ? 'You can listen to the model first. Recordings stay in this tab and are not uploaded.'
+        : 'Recording is not available in this browser. Practise aloud with a partner, then tick the box below.', 'info');
+    }
+
+    function toggleChallengeRecording() {
+      if (!challengeRecordingSupported) {
+        setChallengeRecordingStatus('Recording is not available here. Use the tick-box after practising aloud.', 'info');
+        return;
+      }
+      if (challengeRecordingPending) return;
+      if (challengeMediaRecorder && challengeMediaRecorder.state === 'recording') stopChallengeRecording();
+      else startChallengeRecording();
+    }
+
+    async function startChallengeRecording() {
+      if (!challengeRecordingSupported || challengeMediaRecorder || challengeRecordingPending) return;
+      const nav = typeof navigator !== 'undefined' ? navigator : null;
+      if (!nav || !nav.mediaDevices) return;
+      challengeRecordingPending = true;
+      const session = ++challengeRecordingSession;
+
+      if (challengeRecordedUrl) {
+        URL.revokeObjectURL(challengeRecordedUrl);
+        challengeRecordedUrl = null;
+      }
+      challengeRecordedChunks = [];
+      const audio = document.getElementById('challenge-audio');
+      if (audio) {
+        audio.classList.add('hidden');
+        audio.removeAttribute('src');
+      }
+      const playButton = document.getElementById('challenge-play-recording');
+      if (playButton) playButton.disabled = true;
+
+      try {
+        const stream = await nav.mediaDevices.getUserMedia({ audio: true });
+        if (session !== challengeRecordingSession) {
+          challengeRecordingPending = false;
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+        challengeRecordingStream = stream;
+        const Recorder = window.MediaRecorder;
+        const mimeTypes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
+        let options;
+        if (typeof Recorder.isTypeSupported === 'function') {
+          const supportedType = mimeTypes.find(type => Recorder.isTypeSupported(type));
+          if (supportedType) options = { mimeType: supportedType };
+        }
+        const recorder = options ? new Recorder(stream, options) : new Recorder(stream);
+        recorder.__studioSession = session;
+        challengeMediaRecorder = recorder;
+        recorder.ondataavailable = event => {
+          if (event.data && event.data.size) challengeRecordedChunks.push(event.data);
+        };
+        recorder.onstop = () => finalizeChallengeRecording(recorder);
+        recorder.onerror = () => {
+          setChallengeRecordingStatus('The recording stopped unexpectedly. Please try again.', 'error');
+          setChallengeRecordButton(false);
+          recorder.onstop = null;
+          challengeRecordingPending = false;
+          challengeMediaRecorder = null;
+          if (challengeRecordingStream) {
+            challengeRecordingStream.getTracks().forEach(track => track.stop());
+            challengeRecordingStream = null;
+          }
+        };
+        recorder.start();
+        challengeRecordingPending = false;
+        setChallengeRecordButton(true);
+        setChallengeRecordingStatus('Recording… (up to 15 seconds) say the sentence clearly, then tap stop.', 'recording');
+        clearTimeout(challengeRecordingTimer);
+        challengeRecordingTimer = setTimeout(stopChallengeRecording, 15000);
+      } catch (error) {
+        if (challengeRecordingStream) {
+          challengeRecordingStream.getTracks().forEach(track => track.stop());
+          challengeRecordingStream = null;
+        }
+        challengeMediaRecorder = null;
+        challengeRecordingPending = false;
+        setChallengeRecordButton(false);
+        setChallengeRecordingStatus('Microphone access was not available. You can still practise aloud and tick the box below.', 'error');
+      }
+    }
+
+    function stopChallengeRecording() {
+      clearTimeout(challengeRecordingTimer);
+      challengeRecordingTimer = null;
+      const recorder = challengeMediaRecorder;
+      challengeMediaRecorder = null;
+      setChallengeRecordButton(false);
+      if (recorder) {
+        if (recorder.state !== 'inactive') {
+          try { recorder.stop(); } catch (error) {
+            setChallengeRecordingStatus('The recording could not be stopped. Please try again.', 'error');
+          }
+        } else {
+          finalizeChallengeRecording(recorder);
+        }
+      }
+      if (challengeRecordingStream) {
+        challengeRecordingStream.getTracks().forEach(track => track.stop());
+        challengeRecordingStream = null;
+      }
+    }
+
+    function finalizeChallengeRecording(recorder) {
+      if (typeof recorder.__studioSession === 'number' && recorder.__studioSession !== challengeRecordingSession) return;
+      if (!challengeRecordedChunks.length) {
+        setChallengeRecordingStatus('No audio was captured. Please try recording again.', 'error');
+        return;
+      }
+      try {
+        const blob = new Blob(challengeRecordedChunks, { type: recorder.mimeType || 'audio/webm' });
+        if (!blob.size) {
+          setChallengeRecordingStatus('No audio was captured. Please try recording again.', 'error');
+          return;
+        }
+        if (challengeRecordedUrl) URL.revokeObjectURL(challengeRecordedUrl);
+        challengeRecordedUrl = URL.createObjectURL(blob);
+        const audio = document.getElementById('challenge-audio');
+        if (audio) {
+          audio.src = challengeRecordedUrl;
+          audio.classList.remove('hidden');
+          if (typeof audio.load === 'function') {
+            try { audio.load(); } catch (error) { /* Ignore. */ }
+          }
+        }
+        const playButton = document.getElementById('challenge-play-recording');
+        if (playButton) playButton.disabled = false;
+        setChallengeRecordButton(false);
+        setChallengeRecordingStatus('Recording ready! Play it back, then mark the speaking task complete.', 'success');
+      } catch (error) {
+        setChallengeRecordingStatus('The recording could not be saved in this tab. Please try again.', 'error');
+      }
+    }
+
+    function playChallengeRecording() {
+      const audio = document.getElementById('challenge-audio');
+      if (!audio || !challengeRecordedUrl) {
+        setChallengeRecordingStatus('Record your voice first.', 'info');
+        return;
+      }
+      try {
+        audio.currentTime = 0;
+        const playback = audio.play();
+        if (playback && typeof playback.catch === 'function') {
+          playback.catch(() => setChallengeRecordingStatus('Tap play again to hear your recording.', 'info'));
+        }
+      } catch (error) {
+        setChallengeRecordingStatus('The recording could not play in this browser.', 'error');
+      }
+    }
+
+    function speakChallengeModel() {
+      if (!speakText(CHALLENGE_SPEAKING_SENTENCE)) {
+        setChallengeRecordingStatus('Audio is not available in this browser. Read the sentence and say it aloud.', 'info');
+      }
+    }
+
+    function finishChallengeSpeaking() {
+      if (challengeRecordingPending) return;
+      if (challengeMediaRecorder && challengeMediaRecorder.state === 'recording') {
+        setChallengeRecordingStatus('Stop the recording before marking the task complete.', 'error');
+        return;
+      }
+      const checkbox = document.getElementById('challenge-speaking-check');
+      if (!challengeRecordedUrl && !(checkbox && checkbox.checked)) {
+        setChallengeRecordingStatus('Record your voice, or tick the box after practising aloud with a partner.', 'error');
+        return;
+      }
+      const challenge = getChallenge();
+      challenge.speakingDone = true;
+      if (checkbox) checkbox.checked = true;
+      const firstAward = challengeAward('speaking', 'Speaking task complete!');
+      updateChallengeSpeakingUI();
+      if (firstAward) {
+        setChallengeRecordingStatus('🎉 Speaking task complete!', 'success');
+      } else {
+        setChallengeRecordingStatus('Speaking task complete. You already earned the challenge stars.', 'success');
+      }
+      speakText('Well done! You told the monster how to clean.');
+    }
+
+    function speakText(text) {
+      if (!('speechSynthesis' in window)) return false;
+      try {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.85;
+        utter.lang = 'en-US';
+        window.speechSynthesis.speak(utter);
+        return true;
+      } catch (error) {
+        return false;
+      }
+    }
+
+    /* ==========================================================================
+       MODULE 7: TEACHER DASHBOARD
+       ========================================================================== */
+    function renderTeacherTable() {
+      const tbody = document.getElementById('teacher-table-body');
+      tbody.innerHTML = `
+        <tr class="bg-emerald-50">
+          <td class="p-3">${studentProfile.className}</td>
+          <td class="p-3">#${studentProfile.classNum}</td>
+          <td class="p-3 font-extrabold text-emerald-900">${studentProfile.name} (Active)</td>
+          <td class="p-3 text-emerald-700">Completed (${monsterState.shape} ${monsterState.color})</td>
+          <td class="p-3">${studentProfile.phonicsScore} / 5 Score</td>
+          <td class="p-3">${studentProfile.cupsCompleted ? '✅ Passed' : '⏳ In Progress'}</td>
+          <td class="p-3">${getChallengeDoneCount()} / 4 Tasks</td>
+          <td class="p-3 text-amber-600 font-extrabold">${studentProfile.stars} ⭐</td>
+        </tr>
+        <tr>
+          <td class="p-3">Primary 2B</td>
+          <td class="p-3">#01</td>
+          <td class="p-3 text-slate-500">Chan Siu Ming</td>
+          <td class="p-3 text-slate-400">Completed (circle green)</td>
+          <td class="p-3 text-slate-400">5 / 5 Score</td>
+          <td class="p-3 text-slate-400">✅ Passed</td>
+          <td class="p-3 text-slate-400">4 / 4 Tasks</td>
+          <td class="p-3 text-amber-600 font-extrabold">4 ⭐</td>
+        </tr>
+        <tr>
+          <td class="p-3">Primary 2B</td>
+          <td class="p-3">#02</td>
+          <td class="p-3 text-slate-500">Wong Mei Ling</td>
+          <td class="p-3 text-slate-400">Completed (blob pink)</td>
+          <td class="p-3 text-slate-400">4 / 5 Score</td>
+          <td class="p-3 text-slate-400">⏳ In Progress</td>
+          <td class="p-3 text-slate-400">2 / 4 Tasks</td>
+          <td class="p-3 text-amber-600 font-extrabold">3 ⭐</td>
+        </tr>
+      `;
+    }
+
+    function exportClassData() {
+      const csvContent = "data:text/csv;charset=utf-8," 
+        + "Class,Class Number,Student Name,Phonics Score,CUPS Status,Clean-Up Challenge,Stars\n"
+        + `${studentProfile.className},${studentProfile.classNum},"${studentProfile.name}",${studentProfile.phonicsScore},${studentProfile.cupsCompleted ? 'Passed' : 'Pending'},${getChallengeDoneCount()}/4,${studentProfile.stars}\n`
+        + `Primary 2B,01,"Chan Siu Ming",5,Passed,4/4,4\n`
+        + `Primary 2B,02,"Wong Mei Ling",4,Pending,2/4,3\n`;
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `P2_PLPR_MonsterClean_${studentProfile.className}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
